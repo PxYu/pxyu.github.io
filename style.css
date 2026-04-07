@@ -368,6 +368,36 @@ footer {
     letter-spacing: 0.01em;
 }
 
+.tag {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.83rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.tag-blog {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.tag-paper {
+    background: rgba(58, 110, 95, 0.12);
+    color: #2e7a65;
+}
+
+body.dark-theme .tag-paper {
+    background: rgba(100, 190, 160, 0.14);
+    color: #7dd4b8;
+}
+
+.latest-list {
+    list-style: none;
+    margin-left: 0;
+}
+
 ul,
 ol {
     margin-left: 22px;
@@ -467,6 +497,11 @@ body.dark-theme .profile-photo {
     body:not(.light-theme) .profile-photo {
         border-color: rgba(255, 255, 255, 0.1);
         box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+    }
+
+    body:not(.light-theme) .tag-paper {
+        background: rgba(100, 190, 160, 0.14);
+        color: #7dd4b8;
     }
 }
 
