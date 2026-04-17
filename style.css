@@ -596,6 +596,10 @@ body.dark-theme .profile-photo {
         gap: 6px;
     }
 
+    .tc-date {
+        display: none;
+    }
+
     .hero:hover,
     .panel:hover,
     .entry:hover,
