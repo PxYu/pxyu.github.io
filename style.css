@@ -256,6 +256,9 @@ h1 .degree {
     padding: 14px;
     margin-bottom: 18px;
     border-radius: 12px;
+    position: sticky;
+    top: 16px;
+    z-index: 100;
 }
 
 .section-nav a {
@@ -396,6 +399,21 @@ body.dark-theme .tag-paper {
 .latest-list {
     list-style: none;
     margin-left: 0;
+}
+
+.latest-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+}
+
+.latest-list li:first-child {
+    padding-top: 0;
+}
+
+.latest-list li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
 }
 
 ul,
