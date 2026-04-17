@@ -228,15 +228,14 @@ h1 .degree {
 }
 
 .contact-links a {
-    padding: 8px 14px;
+    padding: 8px;
     border-radius: 999px;
     color: var(--accent);
     background: rgba(255, 255, 255, 0.88);
     border: 1px solid rgba(165, 106, 58, 0.16);
-    font-weight: 600;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
 }
 
 .contact-icon {
