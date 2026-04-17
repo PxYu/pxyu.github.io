@@ -128,7 +128,7 @@ if (terminalCommits) {
 
   const terminalObserver = new IntersectionObserver(
     ([entry]) => { if (entry.isIntersecting) { startAnimation(); terminalObserver.disconnect(); } },
-    { threshold: 0.4 }
+    { threshold: 0.1 }
   );
   terminalObserver.observe(terminalCommits.closest('.panel'));
 }

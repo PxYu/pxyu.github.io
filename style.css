@@ -616,6 +616,11 @@ body.dark-theme .profile-photo {
     overflow: hidden;
 }
 
+.panel.terminal-panel {
+    background: var(--terminal-bar);
+    backdrop-filter: none;
+}
+
 .terminal-bar {
     background: var(--terminal-bar);
     border-radius: 15px 15px 0 0;
@@ -656,7 +661,7 @@ body.dark-theme .profile-photo {
 }
 
 .terminal-prompt-line {
-    margin-bottom: 6px;
+    margin: 0 0 6px;
     color: #8b949e;
 }
 
@@ -669,7 +674,7 @@ body.dark-theme .profile-photo {
     display: flex;
     justify-content: space-between;
     gap: 16px;
-    white-space: nowrap;
+    min-width: max-content;
 }
 
 .tc-left {
