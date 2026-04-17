@@ -595,11 +595,10 @@ body.dark-theme .profile-photo {
         transform: none;
     }
 
-    .hero:hover .profile-photo-pixel {
-        opacity: 1;
-    }
+}
 
-    .hero:hover .profile-photo:not(.profile-photo-pixel) {
+@media (hover: none) {
+    .profile-photo-pixel {
         opacity: 0;
     }
 }
