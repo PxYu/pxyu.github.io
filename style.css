@@ -144,6 +144,7 @@ footer {
 }
 
 .profile-photo {
+    display: block;
     width: 136px;
     height: 136px;
     border-radius: 20px;
