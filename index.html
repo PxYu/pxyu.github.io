@@ -83,6 +83,20 @@
             </nav>
 
             <main>
+                <div class="panel terminal-panel" aria-label="Career timeline">
+                    <div class="terminal-bar">
+                        <span class="terminal-dot dot-red" aria-hidden="true"></span>
+                        <span class="terminal-dot dot-yellow" aria-hidden="true"></span>
+                        <span class="terminal-dot dot-green" aria-hidden="true"></span>
+                        <span class="terminal-title">bash</span>
+                    </div>
+                    <div class="terminal-body">
+                        <p class="terminal-prompt-line"><span class="tc-prompt">~</span> git log --oneline --graph</p>
+                        <div id="terminal-commits" aria-live="polite"></div>
+                        <span class="terminal-cursor" id="terminal-cursor" aria-hidden="true">█</span>
+                    </div>
+                </div>
+
                 <section id="about" class="panel">
                     <h2>About</h2>
                     <p>I work on AI and search at <a href="https://www.snowflake.com/" target="_blank" rel="noopener noreferrer"><strong>Snowflake Inc.</strong></a>. I study accessible information retrieval, with a focus on explainability, reasoning, and multilingual search.</p>

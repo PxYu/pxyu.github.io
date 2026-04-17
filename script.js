@@ -83,3 +83,52 @@ if (sections.length && navLinks.length) {
     });
   });
 }
+
+const terminalCommits = document.getElementById('terminal-commits');
+const terminalCursor = document.getElementById('terminal-cursor');
+
+if (terminalCommits) {
+  const commits = [
+    { hash: 'a3f9c2b', ref: '(HEAD → main)', msg: 'SWE @ Snowflake Inc.', date: '2024 – now' },
+    { hash: '7d1e834', ref: null, msg: 'Ph.D. in CS · UMass Amherst', date: '2021 – 2024' },
+    { hash: '4c8a012', ref: null, msg: 'Research Intern · Dataminr', date: '2023' },
+    { hash: '9b2f567', ref: null, msg: 'Research Intern · Amazon Alexa', date: '2022' },
+    { hash: 'e5a3d91', ref: null, msg: 'M.S. in CS · UMass Amherst', date: '2018 – 2021' },
+    { hash: '2f7c845', ref: null, msg: 'Research Intern · Baidu Research', date: '2020' },
+    { hash: '8d4e123', ref: null, msg: 'B.Eng. in Software Eng · Wuhan University', date: '2014 – 2018' },
+  ];
+
+  const makeLine = ({ hash, ref, msg, date }) => {
+    const line = document.createElement('div');
+    line.className = 'tc-line';
+    line.innerHTML =
+      `<span class="tc-left">` +
+        `<span class="tc-star">*</span>` +
+        ` <span class="tc-hash">${hash}</span>` +
+        (ref ? ` <span class="tc-ref">${ref}</span>` : '') +
+        ` <span class="tc-msg">${msg}</span>` +
+      `</span>` +
+      `<span class="tc-date">${date}</span>`;
+    return line;
+  };
+
+  let started = false;
+  const startAnimation = () => {
+    if (started) return;
+    started = true;
+    commits.forEach((commit, i) => {
+      setTimeout(() => {
+        terminalCommits.appendChild(makeLine(commit));
+        if (i === commits.length - 1 && terminalCursor) {
+          terminalCursor.classList.add('visible');
+        }
+      }, 200 + i * 160);
+    });
+  };
+
+  const terminalObserver = new IntersectionObserver(
+    ([entry]) => { if (entry.isIntersecting) { startAnimation(); terminalObserver.disconnect(); } },
+    { threshold: 0.4 }
+  );
+  terminalObserver.observe(terminalCommits.closest('.panel'));
+}
