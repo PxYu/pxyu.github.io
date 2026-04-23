@@ -210,7 +210,7 @@ function setupInteractiveTerminal() {
     'echo $home': () => ['/home/pxyu'],
     'uname -a': () => ['Linux pxyu.github.io 6.0 #1 SMP x86_64 GNU/Linux'],
     'sudo hire-me': () => [
-      '<span style="color:#ff5f56">pxyu is not in the sudoers file.</span>',
+      '<span style="color:#ff5f56">you are not in the sudoers file.</span>',
       '<span style="color:#ff5f56">This incident will be reported.</span>',
     ],
     'rm -rf /': () => ['<span style="color:#ff5f56">Permission denied. Nice try.</span>'],
