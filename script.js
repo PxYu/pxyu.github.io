@@ -393,7 +393,10 @@ function setupInteractiveTerminal() {
 
   fetch('./land-110m.json')
     .then(r => r.json())
-    .then(world => { landFeature = topojson.feature(world, world.objects.land); })
+    .then(world => {
+      const fc = topojson.feature(world, world.objects.land);
+      landFeature = fc.features ? fc.features[0] : fc;
+    })
     .catch(() => {});
 
   const drawRing = (ring) => {
