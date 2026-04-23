@@ -227,11 +227,17 @@ function setupInteractiveTerminal() {
       '64 bytes: icmp_seq=1 ttl=60 time=11.8 ms',
       '<span class="tc-msg">2 packets transmitted, 2 received, 0% packet loss</span>',
     ],
-    fortune: () => [
-      '"The best time to plant a tree was 20 years ago.',
-      ' The second best time is now."',
-      '                              — Chinese Proverb',
-    ],
+    fortune: () => {
+      fetch('https://api.quotable.io/quotes/random')
+        .then(r => r.json())
+        .then(([d]) => {
+          appendLine(`"${d.content}"`);
+          appendLine(`<span class="tc-date">— ${d.author}</span>`);
+          terminalBody.scrollTop = terminalBody.scrollHeight;
+        })
+        .catch(() => appendLine('<span style="color:#ff5f56">failed to fetch fortune</span>'));
+      return ['<span class="tc-date">fetching fortune...</span>'];
+    },
     'man pxyu': () => [
       '<span class="tc-hash">PXYU(1)                User Commands               PXYU(1)</span>',
       '',
