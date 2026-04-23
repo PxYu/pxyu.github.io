@@ -389,6 +389,30 @@ function setupInteractiveTerminal() {
 
   let visitorLat = 37.77, visitorLng = -122.42;
   let rot = -visitorLng * Math.PI / 180;
+  let landFeature = null;
+
+  if (typeof topojson !== 'undefined') {
+    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json')
+      .then(r => r.json())
+      .then(world => { landFeature = topojson.feature(world, world.objects.land); })
+      .catch(() => {});
+  }
+
+  const drawRing = (ring) => {
+    let penDown = false;
+    ring.forEach(([lng, lat]) => {
+      const la = lat * Math.PI / 180;
+      const effLng = lng * Math.PI / 180 + rot;
+      const x = cx + R * Math.cos(la) * Math.sin(effLng);
+      const y = cy - R * Math.sin(la);
+      if (Math.cos(effLng) > 0) {
+        penDown ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        penDown = true;
+      } else {
+        penDown = false;
+      }
+    });
+  };
 
   fetch('https://ip-api.com/json/?fields=lat,lon,city,country')
     .then(r => r.json())
@@ -450,6 +474,18 @@ function setupInteractiveTerminal() {
       ctx.lineTo(cx + xl, yl);
       ctx.stroke();
     });
+
+    if (landFeature) {
+      ctx.beginPath();
+      const geom = landFeature.geometry;
+      (geom.type === 'MultiPolygon' ? geom.coordinates : [geom.coordinates])
+        .forEach(poly => poly.forEach(drawRing));
+      ctx.fillStyle = dark ? 'rgba(55,95,62,0.75)' : 'rgba(162,212,148,0.78)';
+      ctx.fill();
+      ctx.strokeStyle = dark ? 'rgba(88,168,95,0.55)' : 'rgba(72,142,62,0.6)';
+      ctx.lineWidth = 0.6 * dpr;
+      ctx.stroke();
+    }
 
     if (visitorLat !== null) {
       const la = visitorLat * Math.PI / 180;
