@@ -247,9 +247,11 @@ function setupInteractiveTerminal() {
     clear: () => null,
   };
 
+  const easterEggs = ['whoami', 'sudo hire-me', 'git blame life', 'fortune', 'man pxyu', 'ping pxyu.github.io', 'vim', 'uname -a'];
+  const picks = easterEggs.sort(() => Math.random() - 0.5).slice(0, 2);
   const hintLine = document.createElement('div');
   hintLine.className = 'tc-output-line tc-hint';
-  hintLine.innerHTML = '<span class="tc-date"># try: help · whoami · sudo hire-me</span>';
+  hintLine.innerHTML = `<span class="tc-date"># try: help · ${picks.join(' · ')}</span>`;
   terminalCommits.appendChild(hintLine);
 
   makePrompt();
