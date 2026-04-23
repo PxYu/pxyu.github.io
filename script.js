@@ -228,6 +228,21 @@ function setupInteractiveTerminal() {
       '<span class="tc-msg">2 packets transmitted, 2 received, 0% packet loss</span>',
     ],
     fortune: () => {
+      const fallbacks = [
+        ['"The best way to predict the future is to invent it."', 'Alan Kay'],
+        ['"Programs must be written for people to read, and only incidentally for machines to execute."', 'Harold Abelson'],
+        ['"Simplicity is the ultimate sophistication."', 'Leonardo da Vinci'],
+        ['"Make it work, make it right, make it fast."', 'Kent Beck'],
+        ['"The best time to plant a tree was 20 years ago. The second best time is now."', 'Chinese Proverb'],
+        ['"Any fool can write code that a computer can understand. Good programmers write code that humans can understand."', 'Martin Fowler'],
+        ['"First, solve the problem. Then, write the code."', 'John Johnson'],
+      ];
+      const showFallback = () => {
+        const [q, a] = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+        appendLine(q);
+        appendLine(`<span class="tc-date">— ${a}</span>`);
+        terminalBody.scrollTop = terminalBody.scrollHeight;
+      };
       fetch('https://api.quotable.io/quotes/random')
         .then(r => r.json())
         .then(([d]) => {
@@ -235,7 +250,7 @@ function setupInteractiveTerminal() {
           appendLine(`<span class="tc-date">— ${d.author}</span>`);
           terminalBody.scrollTop = terminalBody.scrollHeight;
         })
-        .catch(() => appendLine('<span style="color:#ff5f56">failed to fetch fortune</span>'));
+        .catch(showFallback);
       return ['<span class="tc-date">fetching fortune...</span>'];
     },
     'man pxyu': () => [
