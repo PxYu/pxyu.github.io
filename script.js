@@ -252,6 +252,11 @@ function setupInteractiveTerminal() {
     clear: () => null,
   };
 
+  const hintLine = document.createElement('div');
+  hintLine.className = 'tc-output-line tc-hint';
+  hintLine.innerHTML = '<span class="tc-date"># try: help · whoami · sudo hire-me</span>';
+  terminalCommits.appendChild(hintLine);
+
   makePrompt();
 
   terminalBody.addEventListener('click', () => hiddenInput.focus());
@@ -300,8 +305,14 @@ function setupInteractiveTerminal() {
     clearTimeout(hideTimer);
     const abstract = anchor.dataset.abstract || '';
     const venue = anchor.dataset.venue || '';
+    const authors = (anchor.dataset.authors || '')
+      .split(',')
+      .map(a => a.trim())
+      .map(a => a === 'Puxuan Yu' ? `<strong>${a}</strong>` : a)
+      .join(', ');
     tip.innerHTML =
       (venue ? `<div class="paper-tooltip-venue">${venue}</div>` : '') +
+      (authors ? `<div class="paper-tooltip-authors">${authors}</div>` : '') +
       `<div class="paper-tooltip-abstract">${abstract}</div>`;
     tip.style.display = 'block';
 
@@ -364,13 +375,18 @@ function setupInteractiveTerminal() {
   fetch('https://ip-api.com/json/?fields=lat,lon,city,country')
     .then(r => r.json())
     .then(d => {
+      if (!d.lat) return;
       visitorLat = d.lat;
       visitorLng = d.lon;
       rot = -visitorLng * Math.PI / 180;
       const label = document.getElementById('globe-city');
       if (label && d.city) label.textContent = `${d.city}, ${d.country}`;
     })
-    .catch(() => {});
+    .catch(() => {
+      visitorLat = 37.77;
+      visitorLng = -122.42;
+      rot = -visitorLng * Math.PI / 180;
+    });
 
   const isDark = () =>
     document.body.classList.contains('dark-theme') ||

@@ -752,6 +752,13 @@ body.dark-theme .profile-photo {
     margin-bottom: 7px;
 }
 
+.paper-tooltip-authors {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
 .paper-tooltip-abstract {
     font-size: 0.84rem;
     color: var(--text-secondary);
