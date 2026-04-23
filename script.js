@@ -391,12 +391,10 @@ function setupInteractiveTerminal() {
   let rot = -visitorLng * Math.PI / 180;
   let landFeature = null;
 
-  if (typeof topojson !== 'undefined') {
-    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json')
-      .then(r => r.json())
-      .then(world => { landFeature = topojson.feature(world, world.objects.land); })
-      .catch(() => {});
-  }
+  fetch('./land-110m.json')
+    .then(r => r.json())
+    .then(world => { landFeature = topojson.feature(world, world.objects.land); })
+    .catch(() => {});
 
   const drawRing = (ring) => {
     let penDown = false;
