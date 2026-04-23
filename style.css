@@ -727,6 +727,96 @@ body.dark-theme .profile-photo {
     display: inline;
 }
 
+/* Paper tooltip */
+.paper-tooltip {
+    display: none;
+    position: absolute;
+    z-index: 500;
+    max-width: 360px;
+    background: var(--panel-strong);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    pointer-events: auto;
+    opacity: 0;
+    transition: opacity 0.16s ease;
+}
+
+.paper-tooltip-venue {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 7px;
+}
+
+.paper-tooltip-abstract {
+    font-size: 0.84rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+}
+
+/* Footer globe */
+footer .footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.globe-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+#visitor-globe {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+}
+
+.globe-city {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+    text-align: center;
+}
+
+/* Interactive terminal */
+.terminal-body {
+    cursor: text;
+}
+
+.tc-interactive-prompt {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: 2px;
+    white-space: pre;
+}
+
+.tc-input-mirror {
+    color: var(--tc-msg-color);
+}
+
+.tc-output-line {
+    color: var(--terminal-text);
+    white-space: pre;
+}
+
+.tc-echo {
+    opacity: 0.55;
+}
+
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;

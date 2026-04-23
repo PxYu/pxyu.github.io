@@ -106,10 +106,10 @@
                 <section id="latest" class="panel">
                     <h2>Latest</h2>
                     <ul class="latest-list">
-                        <li><span class="tag tag-paper">paper</span><a href="https://arxiv.org/abs/2604.18845" target="_blank" rel="noopener noreferrer">Dual-View Training for Instruction-Following Information Retrieval</a> on arXiv <span class="meta">Apr 20, 2026</span></li>
-                        <li><span class="tag tag-paper">paper</span><a href="https://arxiv.org/abs/2604.17632" target="_blank" rel="noopener noreferrer">Code-Switching Information Retrieval: Benchmarks, Analysis, and the Limits of Current Retrievers</a> accepted at ACL&rsquo;26 <span class="meta">Apr 07, 2026</span></li>
+                        <li><span class="tag tag-paper">paper</span><a href="https://arxiv.org/abs/2604.18845" target="_blank" rel="noopener noreferrer" data-venue="arXiv · Apr 2026" data-abstract="Instruction-following retrieval asks models to retrieve documents satisfying explicit relevance criteria expressed in natural language (e.g., &ldquo;find passages that contradict this claim&rdquo;). We propose dual-view training, which jointly optimizes a single encoder from both the query and passage perspectives under instruction conditioning, improving instruction adherence and retrieval quality on BRIGHT and related benchmarks.">Dual-View Training for Instruction-Following Information Retrieval</a> on arXiv <span class="meta">Apr 20, 2026</span></li>
+                        <li><span class="tag tag-paper">paper</span><a href="https://arxiv.org/abs/2604.17632" target="_blank" rel="noopener noreferrer" data-venue="ACL 2026" data-abstract="Code-switching&mdash;alternating between two or more languages in a single query&mdash;is common in multilingual communities yet underexplored in IR. We introduce CS-IR benchmarks spanning multiple language pairs, analyze how code-switching degrades retrieval quality, and show that current multilingual retrievers fall short even when each constituent language is individually well-supported.">Code-Switching Information Retrieval: Benchmarks, Analysis, and the Limits of Current Retrievers</a> accepted at ACL&rsquo;26 <span class="meta">Apr 07, 2026</span></li>
                         <li><span class="tag tag-blog">blog</span><a href="https://www.snowflake.com/en/engineering-blog/pytorch-conference-snowflake-accelerating-innovation/" target="_blank" rel="noopener noreferrer">Highlights from the PyTorch Conference: Snowflake Accelerating Innovation</a> <span class="meta">Nov 19, 2025</span></li>
-                        <li><span class="tag tag-paper">paper</span><a href="https://openreview.net/forum?id=H6so82c2Sw" target="_blank" rel="noopener noreferrer">Arctic-Embed 2.0: Multilingual Retrieval Without Compromise</a> accepted at COLM&rsquo;25 <span class="meta">Jul 07, 2025</span></li>
+                        <li><span class="tag tag-paper">paper</span><a href="https://openreview.net/forum?id=H6so82c2Sw" target="_blank" rel="noopener noreferrer" data-venue="COLM 2025" data-abstract="Arctic-Embed 2.0 is Snowflake&rsquo;s multilingual text embedding model family delivering strong retrieval across 100+ languages without sacrificing English performance. Through improved training data curation, cross-lingual alignment, and efficient model scaling, it overcomes the traditional trade-off between multilingual coverage and single-language quality.">Arctic-Embed 2.0: Multilingual Retrieval Without Compromise</a> accepted at COLM&rsquo;25 <span class="meta">Jul 07, 2025</span></li>
                         <li><span class="tag tag-blog">blog</span><a href="https://www.snowflake.com/en/engineering-blog/arctic-agentic-rag-multimodal-pdf-retrieval/" target="_blank" rel="noopener noreferrer">Evaluating Multimodal vs. Text-Based Retrieval for RAG with Snowflake Cortex</a> <span class="meta">Apr 21, 2025</span></li>
                         <li><span class="tag tag-blog">blog</span><a href="https://www.snowflake.com/en/engineering-blog/impact-retrieval-chunking-finance-rag/" target="_blank" rel="noopener noreferrer">Long-Context Isn&#39;t All You Need: Impact of Retrieval and Chunking on Finance RAG</a> <span class="meta">Mar 11, 2025</span></li>
                         <li><span class="tag tag-blog">blog</span><a href="https://www.snowflake.com/en/engineering-blog/snowflake-arctic-embed-2-multilingual/" target="_blank" rel="noopener noreferrer">Snowflake’s Arctic Embed 2.0 Goes Multilingual: Empowering Global-Scale Retrieval with Inference Efficiency and High-Quality Retrieval</a> <span class="meta">Dec 04, 2024</span></li>
@@ -120,7 +120,13 @@
             </main>
 
             <footer>
-                <p>&copy; 2026 Puxuan Yu</p>
+                <div class="footer-content">
+                    <p>&copy; 2026 Puxuan Yu</p>
+                    <div class="globe-wrap">
+                        <canvas id="visitor-globe" width="160" height="160" aria-label="Rotating globe showing visitor location"></canvas>
+                        <span id="globe-city" class="globe-city"></span>
+                    </div>
+                </div>
             </footer>
         </div>
     </div>

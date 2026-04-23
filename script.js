@@ -119,8 +119,9 @@ if (terminalCommits) {
     commits.forEach((commit, i) => {
       setTimeout(() => {
         terminalCommits.appendChild(makeLine(commit));
-        if (i === commits.length - 1 && terminalCursor) {
-          terminalCursor.classList.add('visible');
+        if (i === commits.length - 1) {
+          if (terminalCursor) terminalCursor.classList.add('visible');
+          setTimeout(setupInteractiveTerminal, 700);
         }
       }, 200 + i * 160);
     });
@@ -132,3 +133,338 @@ if (terminalCommits) {
   );
   terminalObserver.observe(terminalCommits.closest('.panel'));
 }
+
+function setupInteractiveTerminal() {
+  if (!terminalCommits) return;
+  const terminalBody = terminalCommits.closest('.terminal-body');
+  if (!terminalBody) return;
+
+  if (terminalCursor) terminalCursor.style.display = 'none';
+
+  const hiddenInput = document.createElement('input');
+  hiddenInput.type = 'text';
+  hiddenInput.setAttribute('autocomplete', 'off');
+  hiddenInput.setAttribute('autocorrect', 'off');
+  hiddenInput.setAttribute('spellcheck', 'false');
+  hiddenInput.style.cssText = 'position:fixed;opacity:0;pointer-events:none;left:-9999px;top:-9999px;width:1px;height:1px;';
+  document.body.appendChild(hiddenInput);
+
+  let currentPromptEl = null;
+  let inputMirror = null;
+
+  const makePrompt = () => {
+    const div = document.createElement('div');
+    div.className = 'tc-interactive-prompt';
+    div.innerHTML = '<span class="tc-prompt">~</span> <span class="tc-input-mirror"></span><span class="terminal-cursor visible">█</span>';
+    terminalCommits.appendChild(div);
+    currentPromptEl = div;
+    inputMirror = div.querySelector('.tc-input-mirror');
+  };
+
+  const appendLine = (html, cls = 'tc-output-line') => {
+    const div = document.createElement('div');
+    div.className = cls;
+    div.innerHTML = html;
+    terminalCommits.insertBefore(div, currentPromptEl);
+  };
+
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const commands = {
+    help: () => [
+      '<span class="tc-hash">available commands:</span>',
+      '  <span class="tc-ref">whoami</span>           who is this person',
+      '  <span class="tc-ref">ls</span>               list sections',
+      '  <span class="tc-ref">cat bio.txt</span>      full bio',
+      '  <span class="tc-ref">pwd</span>              print directory',
+      '  <span class="tc-ref">open email</span>       contact via email',
+      '  <span class="tc-ref">clear</span>            clear terminal',
+      '<span class="tc-date">hint: try sudo hire-me</span>',
+    ],
+    '?': () => commands.help(),
+    whoami: () => [
+      'Puxuan Yu (Martin) · 余璞轩',
+      'Software Engineer @ <span class="tc-ref">Snowflake Inc.</span>',
+      'Ph.D. in Computer Science, UMass Amherst',
+      'Research: information retrieval, multilingual search, explainability',
+    ],
+    ls: () => ['<span class="tc-ref">bio/</span>  <span class="tc-ref">papers/</span>  <span class="tc-ref">contact/</span>'],
+    'ls -la': () => [
+      'total 3',
+      'drwxr-xr-x  <span class="tc-ref">bio/</span>',
+      'drwxr-xr-x  <span class="tc-ref">papers/</span>',
+      'drwxr-xr-x  <span class="tc-ref">contact/</span>',
+    ],
+    'cat bio.txt': () => [
+      'Building AI and search systems at Snowflake Inc.',
+      'Ph.D. from Manning CICS, UMass Amherst.',
+      'Research @ CIIR, advised by James Allan &amp; Negin Rahimi.',
+      'Prev: Dataminr · Amazon Alexa · Baidu Research.',
+    ],
+    pwd: () => ['/home/pxyu'],
+    'open email': () => {
+      window.open('mailto:pxyuwhu@gmail.com');
+      return ['<span class="tc-msg">opening email client...</span>'];
+    },
+    'echo $shell': () => ['/bin/zsh'],
+    'echo $home': () => ['/home/pxyu'],
+    'uname -a': () => ['Linux pxyu.github.io 6.0 #1 SMP x86_64 GNU/Linux'],
+    'sudo hire-me': () => [
+      '<span style="color:#ff5f56">pxyu is not in the sudoers file.</span>',
+      '<span style="color:#ff5f56">This incident will be reported.</span>',
+    ],
+    'rm -rf /': () => ['<span style="color:#ff5f56">Permission denied. Nice try.</span>'],
+    exit: () => ["There is no escape. You're already here."],
+    vim: () => [
+      '<span class="tc-date">VIM - Vi IMproved 9.1</span>',
+      '~',
+      '~',
+      '<span class="tc-date">To exit: Esc → :q! → Enter</span>',
+    ],
+    nano: () => ['<span class="tc-date">GNU nano 7.2  [New File]</span>', '^X Exit'],
+    'git blame life': () => [
+      '<span class="tc-hash">a1b2c3d</span> (Universe 10000000 00:00:00) 1) things happen',
+      '<span class="tc-hash">a1b2c3d</span> (Universe 10000000 00:00:00) 2) deal with it',
+    ],
+    'ping pxyu.github.io': () => [
+      'PING pxyu.github.io: 56 data bytes',
+      '64 bytes: icmp_seq=0 ttl=60 time=12.4 ms',
+      '64 bytes: icmp_seq=1 ttl=60 time=11.8 ms',
+      '<span class="tc-msg">2 packets transmitted, 2 received, 0% packet loss</span>',
+    ],
+    fortune: () => [
+      '"The best time to plant a tree was 20 years ago.',
+      ' The second best time is now."',
+      '                              — Chinese Proverb',
+    ],
+    'man pxyu': () => [
+      '<span class="tc-hash">PXYU(1)                User Commands               PXYU(1)</span>',
+      '',
+      '<span class="tc-ref">NAME</span>',
+      '    pxyu — software engineer and researcher',
+      '',
+      '<span class="tc-ref">SYNOPSIS</span>',
+      '    pxyu [--email] [--scholar] [--linkedin] [--twitter]',
+      '',
+      '<span class="tc-ref">DESCRIPTION</span>',
+      '    Builds AI and search systems at Snowflake. Ph.D. in CS.',
+    ],
+    clear: () => null,
+  };
+
+  makePrompt();
+
+  terminalBody.addEventListener('click', () => hiddenInput.focus());
+
+  hiddenInput.addEventListener('input', () => {
+    if (inputMirror) inputMirror.textContent = hiddenInput.value;
+  });
+
+  hiddenInput.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+
+    const raw = hiddenInput.value.trim();
+    const cmd = raw.toLowerCase();
+    hiddenInput.value = '';
+    if (inputMirror) inputMirror.textContent = '';
+
+    if (raw !== '') {
+      appendLine(`<span class="tc-prompt">~</span> <span class="tc-msg">${esc(raw)}</span>`, 'tc-output-line tc-echo');
+    }
+
+    if (cmd === 'clear') {
+      terminalCommits.querySelectorAll('.tc-output-line, .tc-echo').forEach(el => el.remove());
+    } else if (cmd !== '') {
+      const handler = commands[cmd];
+      if (handler) {
+        const lines = handler();
+        if (lines) lines.forEach(line => appendLine(line));
+      } else {
+        appendLine(`<span style="color:#ff5f56">zsh: command not found: ${esc(raw)}</span>`);
+      }
+    }
+
+    terminalBody.scrollTop = terminalBody.scrollHeight;
+  });
+}
+
+// Paper tooltips
+(function () {
+  const tip = document.createElement('div');
+  tip.className = 'paper-tooltip';
+  document.body.appendChild(tip);
+
+  let hideTimer;
+
+  const show = (anchor) => {
+    clearTimeout(hideTimer);
+    const abstract = anchor.dataset.abstract || '';
+    const venue = anchor.dataset.venue || '';
+    tip.innerHTML =
+      (venue ? `<div class="paper-tooltip-venue">${venue}</div>` : '') +
+      `<div class="paper-tooltip-abstract">${abstract}</div>`;
+    tip.style.display = 'block';
+
+    const rect = anchor.getBoundingClientRect();
+    const sx = window.scrollX, sy = window.scrollY;
+    tip.style.opacity = '0';
+    tip.style.left = '0';
+    tip.style.top = '0';
+
+    requestAnimationFrame(() => {
+      const tw = tip.offsetWidth, th = tip.offsetHeight;
+      let left = rect.left + sx;
+      let top = rect.top + sy - th - 10;
+
+      if (left + tw > window.innerWidth + sx - 12) left = window.innerWidth + sx - tw - 12;
+      if (left < sx + 8) left = sx + 8;
+      if (top < sy + 8) top = rect.bottom + sy + 10;
+
+      tip.style.left = left + 'px';
+      tip.style.top = top + 'px';
+      tip.style.opacity = '1';
+    });
+  };
+
+  const hide = () => {
+    hideTimer = setTimeout(() => {
+      tip.style.opacity = '0';
+      setTimeout(() => { tip.style.display = 'none'; }, 180);
+    }, 80);
+  };
+
+  tip.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+  tip.addEventListener('mouseleave', hide);
+
+  document.querySelectorAll('a[data-abstract]').forEach(el => {
+    el.addEventListener('mouseenter', () => show(el));
+    el.addEventListener('mouseleave', hide);
+    el.addEventListener('focus', () => show(el));
+    el.addEventListener('blur', hide);
+  });
+})();
+
+// Visitor globe
+(function () {
+  const canvas = document.getElementById('visitor-globe');
+  if (!canvas) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 160 * dpr;
+  canvas.height = 160 * dpr;
+
+  const ctx = canvas.getContext('2d');
+  const S = canvas.width;
+  const cx = S / 2, cy = S / 2;
+  const R = S / 2 - 4 * dpr;
+
+  let visitorLat = null, visitorLng = null;
+  let rot = 0;
+
+  fetch('https://ip-api.com/json/?fields=lat,lon,city,country')
+    .then(r => r.json())
+    .then(d => {
+      visitorLat = d.lat;
+      visitorLng = d.lon;
+      rot = -visitorLng * Math.PI / 180;
+      const label = document.getElementById('globe-city');
+      if (label && d.city) label.textContent = `${d.city}, ${d.country}`;
+    })
+    .catch(() => {});
+
+  const isDark = () =>
+    document.body.classList.contains('dark-theme') ||
+    (!document.body.classList.contains('light-theme') &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  const draw = () => {
+    ctx.clearRect(0, 0, S, S);
+    const dark = isDark();
+
+    const ocean = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.35, 0, cx, cy, R);
+    if (dark) {
+      ocean.addColorStop(0, '#1c3550');
+      ocean.addColorStop(1, '#08141f');
+    } else {
+      ocean.addColorStop(0, '#c5e2f4');
+      ocean.addColorStop(1, '#68aed8');
+    }
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fillStyle = ocean;
+    ctx.fill();
+    ctx.clip();
+
+    ctx.strokeStyle = dark ? 'rgba(100,170,230,0.13)' : 'rgba(40,90,170,0.1)';
+    ctx.lineWidth = 0.8 * dpr;
+
+    for (let l = 0; l < Math.PI * 2; l += Math.PI / 6) {
+      const eff = l + rot;
+      if (Math.cos(eff) < 0) continue;
+      ctx.beginPath();
+      for (let a = -Math.PI / 2; a <= Math.PI / 2; a += 0.06) {
+        const x = cx + R * Math.cos(a) * Math.sin(eff);
+        const y = cy - R * Math.sin(a);
+        a === -Math.PI / 2 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    [-Math.PI / 3, -Math.PI / 6, 0, Math.PI / 6, Math.PI / 3].forEach(lat => {
+      const yl = cy - R * Math.sin(lat);
+      const xl = R * Math.cos(lat);
+      ctx.beginPath();
+      ctx.moveTo(cx - xl, yl);
+      ctx.lineTo(cx + xl, yl);
+      ctx.stroke();
+    });
+
+    if (visitorLat !== null) {
+      const la = visitorLat * Math.PI / 180;
+      const effLng = visitorLng * Math.PI / 180 + rot;
+      if (Math.cos(effLng) > 0) {
+        const mx = cx + R * Math.cos(la) * Math.sin(effLng);
+        const my = cy - R * Math.sin(la);
+        const p = (Math.sin(Date.now() / 500) + 1) / 2;
+
+        ctx.beginPath();
+        ctx.arc(mx, my, (5 + p * 4) * dpr, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(232,137,106,${0.18 + p * 0.18})`;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(mx, my, 3.5 * dpr, 0, Math.PI * 2);
+        ctx.fillStyle = '#e8896a';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+        ctx.lineWidth = dpr;
+        ctx.stroke();
+      }
+    }
+
+    ctx.restore();
+
+    const edge = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R + dpr);
+    edge.addColorStop(0, 'transparent');
+    edge.addColorStop(1, dark ? 'rgba(0,0,0,0.55)' : 'rgba(5,20,60,0.16)');
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fillStyle = edge;
+    ctx.fill();
+
+    const spec = ctx.createRadialGradient(cx - R * 0.4, cy - R * 0.4, 0, cx - R * 0.3, cy - R * 0.3, R * 0.55);
+    spec.addColorStop(0, 'rgba(255,255,255,0.18)');
+    spec.addColorStop(1, 'transparent');
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fillStyle = spec;
+    ctx.fill();
+
+    rot += 0.003;
+    requestAnimationFrame(draw);
+  };
+
+  draw();
+})();
