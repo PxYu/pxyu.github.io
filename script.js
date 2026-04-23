@@ -182,12 +182,7 @@ function setupInteractiveTerminal() {
       '<span class="tc-date">hint: try sudo hire-me</span>',
     ],
     '?': () => commands.help(),
-    whoami: () => [
-      'Puxuan Yu (Martin) · 余璞轩',
-      'Software Engineer @ <span class="tc-ref">Snowflake Inc.</span>',
-      'Ph.D. in Computer Science, UMass Amherst',
-      'Research: information retrieval, multilingual search, explainability',
-    ],
+    whoami: () => ['guest'],
     ls: () => ['<span class="tc-ref">bio/</span>  <span class="tc-ref">papers/</span>  <span class="tc-ref">contact/</span>'],
     'ls -la': () => [
       'total 3',
