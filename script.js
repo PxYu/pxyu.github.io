@@ -155,7 +155,7 @@ function setupInteractiveTerminal() {
   const makePrompt = () => {
     const div = document.createElement('div');
     div.className = 'tc-interactive-prompt';
-    div.innerHTML = '<span class="tc-prompt">~</span> <span class="tc-input-mirror"></span><span class="terminal-cursor visible">█</span>';
+    div.innerHTML = '<span class="tc-prompt">~</span>&nbsp;<span class="tc-input-mirror"></span><span class="terminal-cursor visible">█</span>';
     terminalCommits.appendChild(div);
     currentPromptEl = div;
     inputMirror = div.querySelector('.tc-input-mirror');
@@ -274,7 +274,7 @@ function setupInteractiveTerminal() {
     if (inputMirror) inputMirror.textContent = '';
 
     if (raw !== '') {
-      appendLine(`<span class="tc-prompt">~</span> <span class="tc-msg">${esc(raw)}</span>`, 'tc-output-line tc-echo');
+      appendLine(`<span class="tc-prompt">~</span>&nbsp;<span class="tc-msg">${esc(raw)}</span>`, 'tc-output-line tc-echo');
     }
 
     if (cmd === 'clear') {
