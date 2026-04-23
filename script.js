@@ -369,8 +369,8 @@ function setupInteractiveTerminal() {
   const cx = S / 2, cy = S / 2;
   const R = S / 2 - 4 * dpr;
 
-  let visitorLat = null, visitorLng = null;
-  let rot = 0;
+  let visitorLat = 37.77, visitorLng = -122.42;
+  let rot = -visitorLng * Math.PI / 180;
 
   fetch('https://ip-api.com/json/?fields=lat,lon,city,country')
     .then(r => r.json())
@@ -382,11 +382,7 @@ function setupInteractiveTerminal() {
       const label = document.getElementById('globe-city');
       if (label && d.city) label.textContent = `${d.city}, ${d.country}`;
     })
-    .catch(() => {
-      visitorLat = 37.77;
-      visitorLng = -122.42;
-      rot = -visitorLng * Math.PI / 180;
-    });
+    .catch(() => {});
 
   const isDark = () =>
     document.body.classList.contains('dark-theme') ||
