@@ -269,14 +269,17 @@ function setupInteractiveTerminal() {
   };
 
   const easterEggs = ['whoami', 'sudo hire-me', 'git blame life', 'fortune', 'man pxyu', 'ping pxyu.github.io', 'vim', 'uname -a'];
-  for (let i = easterEggs.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [easterEggs[i], easterEggs[j]] = [easterEggs[j], easterEggs[i]];
-  }
-  const picks = easterEggs.slice(0, 4);
   const hintLine = document.createElement('div');
   hintLine.className = 'tc-output-line tc-hint';
-  hintLine.innerHTML = `<span class="tc-date"># try: help · ${picks.join(' · ')}</span>`;
+  const refreshHint = () => {
+    const pool = easterEggs.slice();
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    hintLine.innerHTML = `<span class="tc-date"># try: help · ${pool.slice(0, 4).join(' · ')}</span>`;
+  };
+  refreshHint();
   terminalCommits.appendChild(hintLine);
 
   makePrompt();
@@ -326,6 +329,7 @@ function setupInteractiveTerminal() {
       history.unshift(raw);
       historyIndex = -1;
       appendLine(`<span class="tc-prompt">~</span>&nbsp;<span class="tc-msg">${esc(raw)}</span>`, 'tc-output-line tc-echo');
+      refreshHint();
     }
 
     if (cmd === 'clear') {
