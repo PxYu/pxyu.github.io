@@ -397,7 +397,6 @@ function setupInteractiveTerminal() {
   let landFeature = null;
   let wuhanScreen = null;
   let visitorScreen = null;
-  let visitorCity = '';
 
   fetch('./land-110m.json')
     .then(r => r.json())
@@ -418,33 +417,56 @@ function setupInteractiveTerminal() {
     return { sx: cx + R * x, sy: cy - R * y, vis: z > 0, z };
   };
 
-  // Stroke-only ring: draw visible segments with limb interpolation, no fill closure
+  // Snap a linearly-interpolated limb point onto the globe circle.
+  // Raw interpolation lands slightly inside the circle; snapping ensures
+  // ctx.arc() starts exactly where lineTo ended — no spurious connector line.
+  const limbSnap = (a, b) => {
+    const t = a.z / (a.z - b.z);
+    const rx = a.sx + t * (b.sx - a.sx) - cx;
+    const ry = a.sy + t * (b.sy - a.sy) - cy;
+    const ang = Math.atan2(ry, rx);
+    return { sx: cx + R * Math.cos(ang), sy: cy + R * Math.sin(ang), ang };
+  };
+
   const drawRing = (ring) => {
     const pts = ring.map(([lng, lat]) => project(lat, lng));
     const n = pts.length;
     let penDown = false;
+    let entryAngle = NaN;
+
     for (let i = 0; i < n; i++) {
       const cur = pts[i];
       const prv = i > 0 ? pts[i - 1] : null;
+
       if (cur.vis) {
         if (!penDown) {
           if (prv && !prv.vis) {
-            const t = prv.z / (prv.z - cur.z);
-            ctx.moveTo(prv.sx + t * (cur.sx - prv.sx), prv.sy + t * (cur.sy - prv.sy));
+            const lp = limbSnap(prv, cur);
+            entryAngle = lp.ang;
+            ctx.moveTo(lp.sx, lp.sy);
           } else {
+            entryAngle = NaN;
             ctx.moveTo(cur.sx, cur.sy);
           }
           penDown = true;
         }
         ctx.lineTo(cur.sx, cur.sy);
-      } else {
-        if (penDown && prv && prv.vis) {
-          const t = prv.z / (prv.z - cur.z);
-          ctx.lineTo(prv.sx + t * (cur.sx - prv.sx), prv.sy + t * (cur.sy - prv.sy));
+      } else if (penDown && prv) {
+        if (prv.vis) {
+          const lp = limbSnap(prv, cur);
+          ctx.lineTo(lp.sx, lp.sy);
+          if (!isNaN(entryAngle)) {
+            // Arc from exit back to entry along the globe circle — no chord, no connect line
+            let da = entryAngle - lp.ang;
+            while (da >  Math.PI) da -= 2 * Math.PI;
+            while (da < -Math.PI) da += 2 * Math.PI;
+            ctx.arc(cx, cy, R, lp.ang, entryAngle, da < 0);
+          }
         }
         penDown = false;
       }
     }
+    if (penDown) ctx.closePath();
   };
 
   fetch('https://ip-api.com/json/?fields=lat,lon,city,country')
@@ -455,7 +477,6 @@ function setupInteractiveTerminal() {
       visitorLng = d.lon;
       rot = -visitorLng * Math.PI / 180;
       const label = document.getElementById('globe-city');
-      if (d.city) visitorCity = `📍 ${d.city}, ${d.country}`;
       if (label && d.city) label.textContent = `${d.city}, ${d.country}`;
     })
     .catch(() => {});
@@ -517,24 +538,12 @@ function setupInteractiveTerminal() {
 
     // Land — bold flat fill + thick outline (cel-shading)
     if (landFeature) {
-      const geom = landFeature.geometry;
-      const polys = geom.type === 'MultiPolygon' ? geom.coordinates : [geom.coordinates];
-
-      // Fill pass: draw ALL vertices for rings that touch the visible hemisphere.
-      // The globe-circle clip handles the boundary — no chord artifacts.
       ctx.beginPath();
-      polys.forEach(poly => poly.forEach(ring => {
-        const pts = ring.map(([lng, lat]) => project(lat, lng));
-        if (!pts.some(p => p.vis)) return; // skip fully hidden rings
-        pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy));
-        ctx.closePath();
-      }));
+      const geom = landFeature.geometry;
+      (geom.type === 'MultiPolygon' ? geom.coordinates : [geom.coordinates])
+        .forEach(poly => poly.forEach(drawRing));
       ctx.fillStyle = dark ? '#2d7a42' : '#5ecf72';
       ctx.fill();
-
-      // Stroke pass: only visible coast segments (clean, no spurious straight lines)
-      ctx.beginPath();
-      polys.forEach(poly => poly.forEach(drawRing));
       ctx.strokeStyle = dark ? '#163320' : '#1d5c2a';
       ctx.lineWidth = 3.5 * dpr;
       ctx.stroke();
@@ -696,9 +705,8 @@ function setupInteractiveTerminal() {
         tooltip.style.top = ly + 'px';
         tooltip.style.opacity = '1';
       } else if (visitorScreen && Math.hypot(mx - visitorScreen.sx, my - visitorScreen.sy) < hitR) {
-        const cityEl = document.getElementById('globe-city');
-        const label = visitorCity || (cityEl && cityEl.textContent ? `📍 ${cityEl.textContent}` : '📍 Your location');
-        tooltip.textContent = label;
+        const cityText = document.getElementById('globe-city')?.textContent;
+        tooltip.textContent = cityText ? `📍 ${cityText}` : '📍 Your location';
         tooltip.style.left = lx + 'px';
         tooltip.style.top = ly + 'px';
         tooltip.style.opacity = '1';
