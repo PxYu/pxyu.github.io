@@ -278,11 +278,11 @@ function setupInteractiveTerminal() {
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
     hintLine.innerHTML = `<span class="tc-date"># try: help · ${pool.slice(0, 4).join(' · ')}</span>`;
-    terminalCommits.insertBefore(hintLine, currentPromptEl);
   };
+  refreshHint();
+  terminalCommits.appendChild(hintLine);
 
   makePrompt();
-  refreshHint();
 
   terminalBody.addEventListener('click', () => hiddenInput.focus());
 
