@@ -181,7 +181,7 @@ function setupInteractiveTerminal() {
       '  <span class="tc-ref">pwd</span>              print directory',
       '  <span class="tc-ref">open email</span>       contact via email',
       '  <span class="tc-ref">clear</span>            clear terminal',
-      '<span class="tc-date">hint: try sudo hire-me</span>',
+      `<span class="tc-date">hint: try ${easterEggs[Math.floor(Math.random() * easterEggs.length)]}</span>`,
     ],
     '?': () => commands.help(),
     whoami: () => [
