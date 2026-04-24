@@ -279,6 +279,17 @@ function setupInteractiveTerminal() {
 
   terminalBody.addEventListener('click', () => hiddenInput.focus());
 
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    if (document.activeElement === hiddenInput) return;
+    const rect = terminalBody.getBoundingClientRect();
+    if (rect.bottom > 0 && rect.top < window.innerHeight) {
+      e.preventDefault();
+      hiddenInput.focus();
+      hiddenInput.dispatchEvent(new KeyboardEvent('keydown', { key: e.key, bubbles: true }));
+    }
+  });
+
   hiddenInput.addEventListener('input', () => {
     if (inputMirror) inputMirror.textContent = hiddenInput.value;
   });
