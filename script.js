@@ -246,11 +246,11 @@ function setupInteractiveTerminal() {
         appendLine(`<span class="tc-date">— ${a}</span>`);
         terminalBody.scrollTop = terminalBody.scrollHeight;
       };
-      fetch('https://api.quotable.io/quotes/random')
+      fetch('https://zenquotes.io/api/random')
         .then(r => r.json())
         .then(([d]) => {
-          appendLine(`"${d.content}"`);
-          appendLine(`<span class="tc-date">— ${d.author}</span>`);
+          appendLine(`"${d.q}"`);
+          appendLine(`<span class="tc-date">— ${d.a}</span>`);
           terminalBody.scrollTop = terminalBody.scrollHeight;
         })
         .catch(showFallback);
@@ -431,16 +431,27 @@ function setupInteractiveTerminal() {
   const drawRing = (ring) => {
     const pts = ring.map(([lng, lat]) => project(lat, lng));
     const n = pts.length;
+    if (!pts.some(p => p.vis)) return;
+
+    // Start from the first invis→vis transition so entryAngle is always known.
+    // Without this, a ring whose vertex #0 is already visible would get
+    // entryAngle=NaN and canvas fill would close with a straight chord.
+    let start = 0;
+    for (let i = 0; i < n; i++) {
+      if (pts[i].vis && !pts[(i + n - 1) % n].vis) { start = i; break; }
+    }
+
     let penDown = false;
     let entryAngle = NaN;
 
-    for (let i = 0; i < n; i++) {
+    for (let ii = 0; ii < n; ii++) {
+      const i   = (start + ii) % n;
       const cur = pts[i];
-      const prv = i > 0 ? pts[i - 1] : null;
+      const prv = pts[(i + n - 1) % n];
 
       if (cur.vis) {
         if (!penDown) {
-          if (prv && !prv.vis) {
+          if (!prv.vis) {
             const lp = limbSnap(prv, cur);
             entryAngle = lp.ang;
             ctx.moveTo(lp.sx, lp.sy);
@@ -451,17 +462,14 @@ function setupInteractiveTerminal() {
           penDown = true;
         }
         ctx.lineTo(cur.sx, cur.sy);
-      } else if (penDown && prv) {
-        if (prv.vis) {
-          const lp = limbSnap(prv, cur);
-          ctx.lineTo(lp.sx, lp.sy);
-          if (!isNaN(entryAngle)) {
-            // Arc from exit back to entry along the globe circle — no chord, no connect line
-            let da = entryAngle - lp.ang;
-            while (da >  Math.PI) da -= 2 * Math.PI;
-            while (da < -Math.PI) da += 2 * Math.PI;
-            ctx.arc(cx, cy, R, lp.ang, entryAngle, da < 0);
-          }
+      } else if (penDown) {
+        const lp = limbSnap(prv, cur);
+        ctx.lineTo(lp.sx, lp.sy);
+        if (!isNaN(entryAngle)) {
+          let da = entryAngle - lp.ang;
+          while (da >  Math.PI) da -= 2 * Math.PI;
+          while (da < -Math.PI) da += 2 * Math.PI;
+          ctx.arc(cx, cy, R, lp.ang, entryAngle, da < 0);
         }
         penDown = false;
       }
