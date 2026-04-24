@@ -411,23 +411,39 @@ function setupInteractiveTerminal() {
     const x0 = Math.cos(la) * Math.sin(lo);
     const y0 = Math.sin(la);
     const z  = Math.cos(la) * Math.cos(lo);
-    // tilt around Z-axis → axis appears diagonal on screen
     const x = x0 * Math.cos(TILT) - y0 * Math.sin(TILT);
     const y = x0 * Math.sin(TILT) + y0 * Math.cos(TILT);
-    return { sx: cx + R * x, sy: cy - R * y, vis: z > 0 };
+    return { sx: cx + R * x, sy: cy - R * y, vis: z > 0, z };
   };
 
   const drawRing = (ring) => {
+    const pts = ring.map(([lng, lat]) => project(lat, lng));
+    const n = pts.length;
     let penDown = false;
-    ring.forEach(([lng, lat]) => {
-      const { sx, sy, vis } = project(lat, lng);
-      if (vis) {
-        penDown ? ctx.lineTo(sx, sy) : ctx.moveTo(sx, sy);
-        penDown = true;
+    for (let i = 0; i < n; i++) {
+      const cur = pts[i];
+      const prv = i > 0 ? pts[i - 1] : null;
+      if (cur.vis) {
+        if (!penDown) {
+          if (prv && !prv.vis) {
+            // entering visible: start at limb crossing
+            const t = prv.z / (prv.z - cur.z);
+            ctx.moveTo(prv.sx + t * (cur.sx - prv.sx), prv.sy + t * (cur.sy - prv.sy));
+          } else {
+            ctx.moveTo(cur.sx, cur.sy);
+          }
+          penDown = true;
+        }
+        ctx.lineTo(cur.sx, cur.sy);
       } else {
+        if (penDown && prv && prv.vis) {
+          // leaving visible: end at limb crossing
+          const t = prv.z / (prv.z - cur.z);
+          ctx.lineTo(prv.sx + t * (cur.sx - prv.sx), prv.sy + t * (cur.sy - prv.sy));
+        }
         penDown = false;
       }
-    });
+    }
   };
 
   fetch('https://ip-api.com/json/?fields=lat,lon,city,country')
@@ -588,14 +604,14 @@ function setupInteractiveTerminal() {
     ctx.lineWidth = 4.5 * dpr;
     ctx.stroke();
 
-    // Cartoon specular — flat white ellipse, no gradient
+    // Specular — small glint in upper-left corner only
     ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, R - 2 * dpr, 0, Math.PI * 2);
     ctx.clip();
     ctx.beginPath();
-    ctx.ellipse(cx - R * 0.27, cy - R * 0.3, R * 0.28, R * 0.14, -0.6, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.32)';
+    ctx.ellipse(cx - R * 0.55, cy - R * 0.55, R * 0.12, R * 0.07, -0.5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
     ctx.fill();
     ctx.restore();
 
