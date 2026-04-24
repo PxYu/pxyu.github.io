@@ -151,6 +151,8 @@ function setupInteractiveTerminal() {
 
   let currentPromptEl = null;
   let inputMirror = null;
+  const history = [];
+  let historyIndex = -1;
 
   const makePrompt = () => {
     const div = document.createElement('div');
@@ -231,30 +233,25 @@ function setupInteractiveTerminal() {
       '<span class="tc-msg">2 packets transmitted, 2 received, 0% packet loss</span>',
     ],
     fortune: () => {
-      const fallbacks = [
-        ['"The best way to predict the future is to invent it."', 'Alan Kay'],
-        ['"Programs must be written for people to read, and only incidentally for machines to execute."', 'Harold Abelson'],
-        ['"Simplicity is the ultimate sophistication."', 'Leonardo da Vinci'],
-        ['"Make it work, make it right, make it fast."', 'Kent Beck'],
-        ['"The best time to plant a tree was 20 years ago. The second best time is now."', 'Chinese Proverb'],
-        ['"Any fool can write code that a computer can understand. Good programmers write code that humans can understand."', 'Martin Fowler'],
-        ['"First, solve the problem. Then, write the code."', 'John Johnson'],
+      const proverbs = [
+        ['千里之行，始于足下。', 'A journey of a thousand miles begins with a single step.'],
+        ['活到老，学到老。', 'Live until old, learn until old.'],
+        ['失败乃成功之母。', 'Failure is the mother of success.'],
+        ['三人行，必有我师焉。', 'Among three people walking, there is always one I can learn from.'],
+        ['欲速则不达。', 'More haste, less speed.'],
+        ['知己知彼，百战不殆。', 'Know yourself and know your enemy, and you will never be defeated.'],
+        ['滴水穿石。', 'Dripping water can pierce through stone.'],
+        ['人无远虑，必有近忧。', 'One who does not plan for the future will find trouble at their doorstep.'],
+        ['一寸光阴一寸金，寸金难买寸光阴。', 'An inch of time is worth an inch of gold, but gold cannot buy time.'],
+        ['鱼和熊掌不可兼得。', 'You cannot have both the fish and the bear\'s paw.'],
+        ['学如逆水行舟，不进则退。', 'Learning is like rowing upstream: not to advance is to fall behind.'],
+        ['书山有路勤为径，学海无涯苦作舟。', 'The road up the mountain of books is paved with diligence; the sea of learning has no shore but hard work as your boat.'],
+        ['众人拾柴火焰高。', 'When everyone gathers firewood, the flames burn high.'],
+        ['不入虎穴，焉得虎子。', 'How can you catch tiger cubs without entering the tiger\'s lair?'],
+        ['授人以鱼不如授人以渔。', 'Give a man a fish and you feed him for a day; teach him to fish and you feed him for a lifetime.'],
       ];
-      const showFallback = () => {
-        const [q, a] = fallbacks[Math.floor(Math.random() * fallbacks.length)];
-        appendLine(q);
-        appendLine(`<span class="tc-date">— ${a}</span>`);
-        terminalBody.scrollTop = terminalBody.scrollHeight;
-      };
-      fetch('https://zenquotes.io/api/random')
-        .then(r => r.json())
-        .then(([d]) => {
-          appendLine(`"${d.q}"`);
-          appendLine(`<span class="tc-date">— ${d.a}</span>`);
-          terminalBody.scrollTop = terminalBody.scrollHeight;
-        })
-        .catch(showFallback);
-      return ['<span class="tc-date">fetching fortune...</span>'];
+      const [zh, en] = proverbs[Math.floor(Math.random() * proverbs.length)];
+      return [zh, `<span class="tc-date">${en}</span>`];
     },
     'man pxyu': () => [
       '<span class="tc-hash">PXYU(1)                User Commands               PXYU(1)</span>',
@@ -287,6 +284,22 @@ function setupInteractiveTerminal() {
   });
 
   hiddenInput.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (history.length === 0) return;
+      historyIndex = Math.min(historyIndex + 1, history.length - 1);
+      hiddenInput.value = history[historyIndex];
+      if (inputMirror) inputMirror.textContent = hiddenInput.value;
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (historyIndex <= 0) { historyIndex = -1; hiddenInput.value = ''; if (inputMirror) inputMirror.textContent = ''; return; }
+      historyIndex--;
+      hiddenInput.value = history[historyIndex];
+      if (inputMirror) inputMirror.textContent = hiddenInput.value;
+      return;
+    }
     if (e.key !== 'Enter') return;
 
     const raw = hiddenInput.value.trim();
@@ -295,6 +308,8 @@ function setupInteractiveTerminal() {
     if (inputMirror) inputMirror.textContent = '';
 
     if (raw !== '') {
+      history.unshift(raw);
+      historyIndex = -1;
       appendLine(`<span class="tc-prompt">~</span>&nbsp;<span class="tc-msg">${esc(raw)}</span>`, 'tc-output-line tc-echo');
     }
 
