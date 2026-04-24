@@ -269,7 +269,11 @@ function setupInteractiveTerminal() {
   };
 
   const easterEggs = ['whoami', 'sudo hire-me', 'git blame life', 'fortune', 'man pxyu', 'ping pxyu.github.io', 'vim', 'uname -a'];
-  const picks = easterEggs.sort(() => Math.random() - 0.5).slice(0, 4);
+  for (let i = easterEggs.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [easterEggs[i], easterEggs[j]] = [easterEggs[j], easterEggs[i]];
+  }
+  const picks = easterEggs.slice(0, 4);
   const hintLine = document.createElement('div');
   hintLine.className = 'tc-output-line tc-hint';
   hintLine.innerHTML = `<span class="tc-date"># try: help · ${picks.join(' · ')}</span>`;
