@@ -418,48 +418,33 @@ function setupInteractiveTerminal() {
     return { sx: cx + R * x, sy: cy - R * y, vis: z > 0, z };
   };
 
+  // Stroke-only ring: draw visible segments with limb interpolation, no fill closure
   const drawRing = (ring) => {
     const pts = ring.map(([lng, lat]) => project(lat, lng));
     const n = pts.length;
     let penDown = false;
-    let entryX = 0, entryY = 0;
-
     for (let i = 0; i < n; i++) {
       const cur = pts[i];
       const prv = i > 0 ? pts[i - 1] : null;
-
       if (cur.vis) {
         if (!penDown) {
           if (prv && !prv.vis) {
             const t = prv.z / (prv.z - cur.z);
-            entryX = prv.sx + t * (cur.sx - prv.sx);
-            entryY = prv.sy + t * (cur.sy - prv.sy);
-            ctx.moveTo(entryX, entryY);
+            ctx.moveTo(prv.sx + t * (cur.sx - prv.sx), prv.sy + t * (cur.sy - prv.sy));
           } else {
-            entryX = cur.sx; entryY = cur.sy;
             ctx.moveTo(cur.sx, cur.sy);
           }
           penDown = true;
         }
         ctx.lineTo(cur.sx, cur.sy);
       } else {
-        if (penDown && prv) {
+        if (penDown && prv && prv.vis) {
           const t = prv.z / (prv.z - cur.z);
-          const exitX = prv.sx + t * (cur.sx - prv.sx);
-          const exitY = prv.sy + t * (cur.sy - prv.sy);
-          ctx.lineTo(exitX, exitY);
-          // Close along the globe's silhouette circle instead of a straight chord
-          const ea = Math.atan2(entryY - cy, entryX - cx);
-          const xa = Math.atan2(exitY - cy, exitX - cx);
-          let da = ea - xa;
-          while (da >  Math.PI) da -= 2 * Math.PI;
-          while (da < -Math.PI) da += 2 * Math.PI;
-          ctx.arc(cx, cy, R, xa, ea, da < 0);
-          penDown = false;
+          ctx.lineTo(prv.sx + t * (cur.sx - prv.sx), prv.sy + t * (cur.sy - prv.sy));
         }
+        penDown = false;
       }
     }
-    if (penDown) ctx.closePath();
   };
 
   fetch('https://ip-api.com/json/?fields=lat,lon,city,country')
@@ -532,12 +517,24 @@ function setupInteractiveTerminal() {
 
     // Land — bold flat fill + thick outline (cel-shading)
     if (landFeature) {
-      ctx.beginPath();
       const geom = landFeature.geometry;
-      (geom.type === 'MultiPolygon' ? geom.coordinates : [geom.coordinates])
-        .forEach(poly => poly.forEach(drawRing));
+      const polys = geom.type === 'MultiPolygon' ? geom.coordinates : [geom.coordinates];
+
+      // Fill pass: draw ALL vertices for rings that touch the visible hemisphere.
+      // The globe-circle clip handles the boundary — no chord artifacts.
+      ctx.beginPath();
+      polys.forEach(poly => poly.forEach(ring => {
+        const pts = ring.map(([lng, lat]) => project(lat, lng));
+        if (!pts.some(p => p.vis)) return; // skip fully hidden rings
+        pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy));
+        ctx.closePath();
+      }));
       ctx.fillStyle = dark ? '#2d7a42' : '#5ecf72';
       ctx.fill();
+
+      // Stroke pass: only visible coast segments (clean, no spurious straight lines)
+      ctx.beginPath();
+      polys.forEach(poly => poly.forEach(drawRing));
       ctx.strokeStyle = dark ? '#163320' : '#1d5c2a';
       ctx.lineWidth = 3.5 * dpr;
       ctx.stroke();
@@ -699,7 +696,9 @@ function setupInteractiveTerminal() {
         tooltip.style.top = ly + 'px';
         tooltip.style.opacity = '1';
       } else if (visitorScreen && Math.hypot(mx - visitorScreen.sx, my - visitorScreen.sy) < hitR) {
-        tooltip.textContent = visitorCity || '📍 You are here';
+        const cityEl = document.getElementById('globe-city');
+        const label = visitorCity || (cityEl && cityEl.textContent ? `📍 ${cityEl.textContent}` : '📍 Your location');
+        tooltip.textContent = label;
         tooltip.style.left = lx + 'px';
         tooltip.style.top = ly + 'px';
         tooltip.style.opacity = '1';
