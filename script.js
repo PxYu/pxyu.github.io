@@ -396,6 +396,8 @@ function setupInteractiveTerminal() {
   let rot = -visitorLng * Math.PI / 180;
   let landFeature = null;
   let wuhanScreen = null;
+  let visitorScreen = null;
+  let visitorCity = '';
 
   fetch('./land-110m.json')
     .then(r => r.json())
@@ -420,30 +422,44 @@ function setupInteractiveTerminal() {
     const pts = ring.map(([lng, lat]) => project(lat, lng));
     const n = pts.length;
     let penDown = false;
+    let entryX = 0, entryY = 0;
+
     for (let i = 0; i < n; i++) {
       const cur = pts[i];
       const prv = i > 0 ? pts[i - 1] : null;
+
       if (cur.vis) {
         if (!penDown) {
           if (prv && !prv.vis) {
-            // entering visible: start at limb crossing
             const t = prv.z / (prv.z - cur.z);
-            ctx.moveTo(prv.sx + t * (cur.sx - prv.sx), prv.sy + t * (cur.sy - prv.sy));
+            entryX = prv.sx + t * (cur.sx - prv.sx);
+            entryY = prv.sy + t * (cur.sy - prv.sy);
+            ctx.moveTo(entryX, entryY);
           } else {
+            entryX = cur.sx; entryY = cur.sy;
             ctx.moveTo(cur.sx, cur.sy);
           }
           penDown = true;
         }
         ctx.lineTo(cur.sx, cur.sy);
       } else {
-        if (penDown && prv && prv.vis) {
-          // leaving visible: end at limb crossing
+        if (penDown && prv) {
           const t = prv.z / (prv.z - cur.z);
-          ctx.lineTo(prv.sx + t * (cur.sx - prv.sx), prv.sy + t * (cur.sy - prv.sy));
+          const exitX = prv.sx + t * (cur.sx - prv.sx);
+          const exitY = prv.sy + t * (cur.sy - prv.sy);
+          ctx.lineTo(exitX, exitY);
+          // Close along the globe's silhouette circle instead of a straight chord
+          const ea = Math.atan2(entryY - cy, entryX - cx);
+          const xa = Math.atan2(exitY - cy, exitX - cx);
+          let da = ea - xa;
+          while (da >  Math.PI) da -= 2 * Math.PI;
+          while (da < -Math.PI) da += 2 * Math.PI;
+          ctx.arc(cx, cy, R, xa, ea, da < 0);
+          penDown = false;
         }
-        penDown = false;
       }
     }
+    if (penDown) ctx.closePath();
   };
 
   fetch('https://ip-api.com/json/?fields=lat,lon,city,country')
@@ -454,6 +470,7 @@ function setupInteractiveTerminal() {
       visitorLng = d.lon;
       rot = -visitorLng * Math.PI / 180;
       const label = document.getElementById('globe-city');
+      if (d.city) visitorCity = `📍 ${d.city}, ${d.country}`;
       if (label && d.city) label.textContent = `${d.city}, ${d.country}`;
     })
     .catch(() => {});
@@ -587,11 +604,13 @@ function setupInteractiveTerminal() {
     }
 
     // Visitor pin
+    const visitorHR = 9 * dpr;
     if (visitorLat !== null) {
       const vp = project(visitorLat, visitorLng);
+      visitorScreen = vp.vis ? { sx: vp.sx, sy: vp.sy - visitorHR * 2.2 } : null;
       if (vp.vis) {
         const p = (Math.sin(Date.now() / 450) + 1) / 2;
-        drawPin(vp.sx, vp.sy, 9 * dpr, '#ff3a2e', `rgba(255,60,40,${0.55 - p * 0.45})`, p);
+        drawPin(vp.sx, vp.sy, visitorHR, '#ff3a2e', `rgba(255,60,40,${0.55 - p * 0.45})`, p);
       }
     }
 
@@ -661,21 +680,29 @@ function setupInteractiveTerminal() {
 
   draw();
 
-  // Hover tooltip for Wuhan dot
+  // Hover tooltips for both pins
   const tooltip = document.getElementById('globe-tooltip');
   if (tooltip) {
     canvas.addEventListener('mousemove', e => {
-      if (!wuhanScreen) { tooltip.style.opacity = '0'; return; }
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
       const mx = (e.clientX - rect.left) * scaleX;
       const my = (e.clientY - rect.top) * scaleY;
-      const dist = Math.hypot(mx - wuhanScreen.sx, my - wuhanScreen.sy);
-      if (dist < 14 * dpr) {
+      const hitR = 14 * dpr;
+      const lx = e.clientX - rect.left + 10;
+      const ly = e.clientY - rect.top - 28;
+
+      if (wuhanScreen && Math.hypot(mx - wuhanScreen.sx, my - wuhanScreen.sy) < hitR) {
+        tooltip.textContent = '🏠 Wuhan, China';
+        tooltip.style.left = lx + 'px';
+        tooltip.style.top = ly + 'px';
         tooltip.style.opacity = '1';
-        tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
-        tooltip.style.top = (e.clientY - rect.top - 28) + 'px';
+      } else if (visitorScreen && Math.hypot(mx - visitorScreen.sx, my - visitorScreen.sy) < hitR) {
+        tooltip.textContent = visitorCity || '📍 You are here';
+        tooltip.style.left = lx + 'px';
+        tooltip.style.top = ly + 'px';
+        tooltip.style.opacity = '1';
       } else {
         tooltip.style.opacity = '0';
       }
