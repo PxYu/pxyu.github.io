@@ -182,7 +182,10 @@ function setupInteractiveTerminal() {
       '<span class="tc-date">hint: try sudo hire-me</span>',
     ],
     '?': () => commands.help(),
-    whoami: () => ['guest'],
+    whoami: () => [
+      'guest',
+      '<span class="tc-date">（but aren\'t we all just guests on this pale blue dot?）</span>',
+    ],
     ls: () => ['<span class="tc-ref">bio/</span>  <span class="tc-ref">papers/</span>  <span class="tc-ref">contact/</span>'],
     'ls -la': () => [
       'total 3',
@@ -379,17 +382,20 @@ function setupInteractiveTerminal() {
   if (!canvas) return;
 
   const dpr = window.devicePixelRatio || 1;
-  canvas.width = 160 * dpr;
-  canvas.height = 160 * dpr;
+  canvas.width = 320 * dpr;
+  canvas.height = 320 * dpr;
 
   const ctx = canvas.getContext('2d');
   const S = canvas.width;
   const cx = S / 2, cy = S / 2;
   const R = S / 2 - 4 * dpr;
 
+  const TILT = 23.5 * Math.PI / 180;
+
   let visitorLat = 37.77, visitorLng = -122.42;
   let rot = -visitorLng * Math.PI / 180;
   let landFeature = null;
+  let wuhanScreen = null;
 
   fetch('./land-110m.json')
     .then(r => r.json())
@@ -399,15 +405,24 @@ function setupInteractiveTerminal() {
     })
     .catch(() => {});
 
+  const project = (lat_deg, lng_deg) => {
+    const la = lat_deg * Math.PI / 180;
+    const lo = lng_deg * Math.PI / 180 + rot;
+    const x0 = Math.cos(la) * Math.sin(lo);
+    const y0 = Math.sin(la);
+    const z  = Math.cos(la) * Math.cos(lo);
+    // tilt around Z-axis → axis appears diagonal on screen
+    const x = x0 * Math.cos(TILT) - y0 * Math.sin(TILT);
+    const y = x0 * Math.sin(TILT) + y0 * Math.cos(TILT);
+    return { sx: cx + R * x, sy: cy - R * y, vis: z > 0 };
+  };
+
   const drawRing = (ring) => {
     let penDown = false;
     ring.forEach(([lng, lat]) => {
-      const la = lat * Math.PI / 180;
-      const effLng = lng * Math.PI / 180 + rot;
-      const x = cx + R * Math.cos(la) * Math.sin(effLng);
-      const y = cy - R * Math.sin(la);
-      if (Math.cos(effLng) > 0) {
-        penDown ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      const { sx, sy, vis } = project(lat, lng);
+      if (vis) {
+        penDown ? ctx.lineTo(sx, sy) : ctx.moveTo(sx, sy);
         penDown = true;
       } else {
         penDown = false;
@@ -436,13 +451,14 @@ function setupInteractiveTerminal() {
     ctx.clearRect(0, 0, S, S);
     const dark = isDark();
 
-    const ocean = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.35, 0, cx, cy, R);
+    // Ocean — flat + rim shadow, saturated cartoon colors
+    const ocean = ctx.createRadialGradient(cx - R * 0.25, cy - R * 0.3, R * 0.1, cx, cy, R);
     if (dark) {
-      ocean.addColorStop(0, '#1c3550');
-      ocean.addColorStop(1, '#08141f');
+      ocean.addColorStop(0, '#1a4a7a');
+      ocean.addColorStop(1, '#0a1e35');
     } else {
-      ocean.addColorStop(0, '#c5e2f4');
-      ocean.addColorStop(1, '#68aed8');
+      ocean.addColorStop(0, '#5bbde4');
+      ocean.addColorStop(1, '#1e7ec8');
     }
 
     ctx.save();
@@ -452,86 +468,202 @@ function setupInteractiveTerminal() {
     ctx.fill();
     ctx.clip();
 
-    ctx.strokeStyle = dark ? 'rgba(100,170,230,0.13)' : 'rgba(40,90,170,0.1)';
-    ctx.lineWidth = 0.8 * dpr;
+    // Grid lines — dashed
+    ctx.setLineDash([3 * dpr, 5 * dpr]);
+    ctx.strokeStyle = dark ? 'rgba(130,200,255,0.38)' : 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 1.8 * dpr;
 
-    for (let l = 0; l < Math.PI * 2; l += Math.PI / 6) {
-      const eff = l + rot;
-      if (Math.cos(eff) < 0) continue;
+    for (let l = 0; l < 360; l += 30) {
       ctx.beginPath();
-      for (let a = -Math.PI / 2; a <= Math.PI / 2; a += 0.06) {
-        const x = cx + R * Math.cos(a) * Math.sin(eff);
-        const y = cy - R * Math.sin(a);
-        a === -Math.PI / 2 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      let first = true;
+      for (let a = -90; a <= 90; a += 3) {
+        const { sx, sy, vis } = project(a, l);
+        if (vis) { first ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy); first = false; }
+        else { first = true; }
       }
       ctx.stroke();
     }
 
-    [-Math.PI / 3, -Math.PI / 6, 0, Math.PI / 6, Math.PI / 3].forEach(lat => {
-      const yl = cy - R * Math.sin(lat);
-      const xl = R * Math.cos(lat);
+    [-60, -30, 0, 30, 60].forEach(lat => {
       ctx.beginPath();
-      ctx.moveTo(cx - xl, yl);
-      ctx.lineTo(cx + xl, yl);
+      let first = true;
+      for (let l = 0; l <= 361; l += 3) {
+        const { sx, sy, vis } = project(lat, l);
+        if (vis) { first ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy); first = false; }
+        else { first = true; }
+      }
       ctx.stroke();
     });
 
+    ctx.setLineDash([]);
+
+    // Land — bold flat fill + thick outline (cel-shading)
     if (landFeature) {
       ctx.beginPath();
       const geom = landFeature.geometry;
       (geom.type === 'MultiPolygon' ? geom.coordinates : [geom.coordinates])
         .forEach(poly => poly.forEach(drawRing));
-      ctx.fillStyle = dark ? 'rgba(55,95,62,0.75)' : 'rgba(162,212,148,0.78)';
+      ctx.fillStyle = dark ? '#2d7a42' : '#5ecf72';
       ctx.fill();
-      ctx.strokeStyle = dark ? 'rgba(88,168,95,0.55)' : 'rgba(72,142,62,0.6)';
-      ctx.lineWidth = 0.6 * dpr;
+      ctx.strokeStyle = dark ? '#163320' : '#1d5c2a';
+      ctx.lineWidth = 3.5 * dpr;
       ctx.stroke();
     }
 
+    // Map-pin helper: tip at (px, py), head above
+    const drawPin = (px, py, hr, fillColor, ringColor, pulse) => {
+      const headY = py - hr * 2.2;
+      const alpha = 0.88;
+
+      // Cartoon pulse: expanding stroke ring (no fill, no blur)
+      ctx.beginPath();
+      ctx.arc(px, headY, hr + pulse * 10 * dpr, 0, Math.PI * 2);
+      ctx.strokeStyle = ringColor;
+      ctx.lineWidth = 2.5 * dpr;
+      ctx.stroke();
+
+      // Pin body
+      ctx.beginPath();
+      ctx.arc(px, headY, hr, Math.PI / 2 - alpha, Math.PI / 2 + alpha, true);
+      ctx.lineTo(px, py);
+      ctx.closePath();
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+
+      // Bold flat outline
+      ctx.beginPath();
+      ctx.arc(px, headY, hr, Math.PI / 2 - alpha, Math.PI / 2 + alpha, true);
+      ctx.lineTo(px, py);
+      ctx.closePath();
+      ctx.strokeStyle = dark ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.65)';
+      ctx.lineWidth = 3 * dpr;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+
+      // Inner white dot
+      ctx.beginPath();
+      ctx.arc(px, headY, hr * 0.36, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.fill();
+    };
+
+    // Hometown pin — Wuhan
+    const wuhan = project(30.59, 114.31);
+    const wuhanHR = 9 * dpr;
+    wuhanScreen = wuhan.vis ? { sx: wuhan.sx, sy: wuhan.sy - wuhanHR * 2.2 } : null;
+    if (wuhan.vis) {
+      const p2 = (Math.sin(Date.now() / 600 + 1.5) + 1) / 2;
+      drawPin(wuhan.sx, wuhan.sy, wuhanHR, '#f5c400', `rgba(245,196,0,${0.55 - p2 * 0.45})`, p2);
+
+      const distFromCenter = Math.hypot(wuhan.sx - cx, wuhan.sy - cy);
+      if (distFromCenter < R * 0.82) {
+        ctx.font = `bold ${14 * dpr}px ui-monospace, monospace`;
+        ctx.fillStyle = dark ? '#ffe040' : '#6b4700';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        // white knockout behind text for readability
+        ctx.strokeStyle = dark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.8)';
+        ctx.lineWidth = 4 * dpr;
+        ctx.lineJoin = 'round';
+        ctx.strokeText('Wuhan', wuhan.sx + wuhanHR + 6 * dpr, wuhan.sy - wuhanHR * 2.2);
+        ctx.fillText('Wuhan', wuhan.sx + wuhanHR + 6 * dpr, wuhan.sy - wuhanHR * 2.2);
+      }
+    }
+
+    // Visitor pin
     if (visitorLat !== null) {
-      const la = visitorLat * Math.PI / 180;
-      const effLng = visitorLng * Math.PI / 180 + rot;
-      if (Math.cos(effLng) > 0) {
-        const mx = cx + R * Math.cos(la) * Math.sin(effLng);
-        const my = cy - R * Math.sin(la);
-        const p = (Math.sin(Date.now() / 500) + 1) / 2;
-
-        ctx.beginPath();
-        ctx.arc(mx, my, (5 + p * 4) * dpr, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(232,137,106,${0.18 + p * 0.18})`;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(mx, my, 3.5 * dpr, 0, Math.PI * 2);
-        ctx.fillStyle = '#e8896a';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.65)';
-        ctx.lineWidth = dpr;
-        ctx.stroke();
+      const vp = project(visitorLat, visitorLng);
+      if (vp.vis) {
+        const p = (Math.sin(Date.now() / 450) + 1) / 2;
+        drawPin(vp.sx, vp.sy, 9 * dpr, '#ff3a2e', `rgba(255,60,40,${0.55 - p * 0.45})`, p);
       }
     }
 
     ctx.restore();
 
-    const edge = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R + dpr);
-    edge.addColorStop(0, 'transparent');
-    edge.addColorStop(1, dark ? 'rgba(0,0,0,0.55)' : 'rgba(5,20,60,0.16)');
+    // Globe border — bold flat stroke
     ctx.beginPath();
     ctx.arc(cx, cy, R, 0, Math.PI * 2);
-    ctx.fillStyle = edge;
-    ctx.fill();
+    ctx.strokeStyle = dark ? '#000' : '#0a1a3a';
+    ctx.lineWidth = 4.5 * dpr;
+    ctx.stroke();
 
-    const spec = ctx.createRadialGradient(cx - R * 0.4, cy - R * 0.4, 0, cx - R * 0.3, cy - R * 0.3, R * 0.55);
-    spec.addColorStop(0, 'rgba(255,255,255,0.18)');
-    spec.addColorStop(1, 'transparent');
+    // Cartoon specular — flat white ellipse, no gradient
+    ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, R, 0, Math.PI * 2);
-    ctx.fillStyle = spec;
+    ctx.arc(cx, cy, R - 2 * dpr, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.ellipse(cx - R * 0.27, cy - R * 0.3, R * 0.28, R * 0.14, -0.6, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.32)';
+    ctx.fill();
+    ctx.restore();
+
+    // Rotation axis — diagonal line showing 23.5° tilt
+    // North Pole on screen: (cx - R·sin(TILT), cy - R·cos(TILT))
+    const ext = 16 * dpr;
+    const nax = cx - (R + ext) * Math.sin(TILT);
+    const nay = cy - (R + ext) * Math.cos(TILT);
+    const sax = cx + (R + ext) * Math.sin(TILT);
+    const say = cy + (R + ext) * Math.cos(TILT);
+    const axisColor = dark ? 'rgba(180,210,255,0.85)' : 'rgba(30,60,160,0.75)';
+
+    ctx.save();
+    // Line through the globe (dashed inside)
+    ctx.strokeStyle = axisColor;
+    ctx.lineWidth = 2 * dpr;
+    ctx.setLineDash([5 * dpr, 4 * dpr]);
+    ctx.beginPath();
+    ctx.moveTo(nax, nay);
+    ctx.lineTo(sax, say);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Pole tip circles
+    ctx.fillStyle = axisColor;
+    ctx.beginPath();
+    ctx.arc(nax, nay, 4 * dpr, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(sax, say, 4 * dpr, 0, Math.PI * 2);
     ctx.fill();
 
-    rot += 0.003;
+    // N / S labels
+    ctx.font = `bold ${11 * dpr}px monospace`;
+    ctx.fillStyle = axisColor;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const labelOff = 9 * dpr;
+    // nudge labels perpendicular to axis (axis direction: sin(TILT) left, cos(TILT) up)
+    ctx.fillText('N', nax - labelOff * Math.cos(TILT), nay + labelOff * Math.sin(TILT));
+    ctx.fillText('S', sax + labelOff * Math.cos(TILT), say - labelOff * Math.sin(TILT));
+    ctx.restore();
+
+    rot += 0.008;
     requestAnimationFrame(draw);
   };
 
   draw();
+
+  // Hover tooltip for Wuhan dot
+  const tooltip = document.getElementById('globe-tooltip');
+  if (tooltip) {
+    canvas.addEventListener('mousemove', e => {
+      if (!wuhanScreen) { tooltip.style.opacity = '0'; return; }
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const mx = (e.clientX - rect.left) * scaleX;
+      const my = (e.clientY - rect.top) * scaleY;
+      const dist = Math.hypot(mx - wuhanScreen.sx, my - wuhanScreen.sy);
+      if (dist < 14 * dpr) {
+        tooltip.style.opacity = '1';
+        tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+        tooltip.style.top = (e.clientY - rect.top - 28) + 'px';
+      } else {
+        tooltip.style.opacity = '0';
+      }
+    });
+    canvas.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
+  }
 })();
