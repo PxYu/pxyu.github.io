@@ -511,15 +511,15 @@ function setupInteractiveTerminal() {
     if (penDown) ctx.closePath();
   };
 
-  fetch('https://ip-api.com/json/?fields=lat,lon,city,country')
+  fetch('https://ipapi.co/json/')
     .then(r => r.json())
     .then(d => {
-      if (!d.lat) return;
-      visitorLat = d.lat;
-      visitorLng = d.lon;
+      if (!d.latitude) return;
+      visitorLat = d.latitude;
+      visitorLng = d.longitude;
       rot = -visitorLng * Math.PI / 180;
       const label = document.getElementById('globe-city');
-      if (label && d.city) label.textContent = `${d.city}, ${d.country}`;
+      if (label && d.city) label.textContent = `${d.city}, ${d.country_name}`;
     })
     .catch(() => {});
 
