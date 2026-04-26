@@ -625,6 +625,10 @@ body.dark-theme .profile-photo {
         transform: none;
     }
 
+    .footer-links {
+        display: none;
+    }
+
 }
 
 @media (hover: none) {
