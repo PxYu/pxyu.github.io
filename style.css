@@ -21,6 +21,9 @@
     --tc-msg-color: #0d0b0a;
     --tc-date-color: #6b5f58;
     --tc-prompt-color: #27804a;
+    --tt-bg: #1e1e1e;
+    --tt-text: #eee;
+    --tt-border: #333;
 }
 
 body.dark-theme {
@@ -46,6 +49,9 @@ body.dark-theme {
     --tc-msg-color: #e6edf3;
     --tc-date-color: #8b949e;
     --tc-prompt-color: #27c93f;
+    --tt-bg: #2a2522;
+    --tt-text: #e8e0db;
+    --tt-border: rgba(232, 137, 106, 0.18);
 }
 
 * {
@@ -122,7 +128,6 @@ body {
 
 .hero,
 .panel,
-.section-nav,
 footer {
     background: var(--panel);
     border: 1px solid var(--border);
@@ -239,8 +244,7 @@ h1 .degree {
     flex-wrap: wrap;
 }
 
-.contact-links a,
-.section-nav a {
+.contact-links a {
     text-decoration: none;
     transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
@@ -291,32 +295,6 @@ h1 .degree {
     color: #ffffff;
 }
 
-.section-nav {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    padding: 14px;
-    margin-bottom: 18px;
-    border-radius: 12px;
-    position: sticky;
-    top: 16px;
-    z-index: 100;
-}
-
-.section-nav a {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    font-weight: 600;
-    padding: 8px 14px;
-    border-radius: 999px;
-}
-
-.section-nav a:hover,
-.section-nav a:focus-visible,
-.section-nav a.active {
-    background: var(--accent-soft);
-    color: var(--accent);
-}
 
 main {
     display: grid;
@@ -551,6 +529,9 @@ body.dark-theme .profile-photo {
         --tc-msg-color: #e6edf3;
         --tc-date-color: #8b949e;
         --tc-prompt-color: #27c93f;
+        --tt-bg: #2a2522;
+        --tt-text: #e8e0db;
+        --tt-border: rgba(232, 137, 106, 0.18);
     }
 
     body:not(.light-theme) .contact-links a {
@@ -608,10 +589,6 @@ body.dark-theme .profile-photo {
         flex-direction: column;
         align-items: flex-start;
         gap: 2px;
-    }
-
-    .section-nav {
-        gap: 6px;
     }
 
     .tc-date {
@@ -831,8 +808,8 @@ footer .footer-content {
 
 .globe-tooltip {
     position: absolute;
-    background: var(--bg-secondary, #1e1e1e);
-    color: var(--text-primary, #eee);
+    background: var(--tt-bg);
+    color: var(--tt-text);
     font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
     font-size: 0.7rem;
     padding: 3px 8px;
@@ -841,7 +818,7 @@ footer .footer-content {
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.15s ease;
-    border: 1px solid var(--border-color, #333);
+    border: 1px solid var(--tt-border);
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     z-index: 10;
 }

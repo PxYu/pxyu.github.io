@@ -41,49 +41,6 @@ systemDarkMode.addEventListener('change', (event) => {
   }
 });
 
-const sections = [...document.querySelectorAll('main section[id]')];
-const navLinks = [...document.querySelectorAll('.section-nav a')];
-
-if (sections.length && navLinks.length) {
-  const linkById = new Map(
-    navLinks.map((link) => [link.getAttribute('href')?.slice(1), link])
-  );
-
-  const setActiveLink = (id) => {
-    navLinks.forEach((link) => {
-      const isActive = link.getAttribute('href') === `#${id}`;
-      link.classList.toggle('active', isActive);
-    });
-  };
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      const visible = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0];
-
-      if (visible) {
-        setActiveLink(visible.target.id);
-      }
-    },
-    {
-      rootMargin: '-20% 0px -55% 0px',
-      threshold: [0.2, 0.4, 0.6],
-    }
-  );
-
-  sections.forEach((section) => observer.observe(section));
-
-  navLinks.forEach((link) => {
-    link.addEventListener('click', () => {
-      const id = link.getAttribute('href')?.slice(1);
-      if (id && linkById.has(id)) {
-        setActiveLink(id);
-      }
-    });
-  });
-}
-
 const terminalCommits = document.getElementById('terminal-commits');
 const terminalCursor = document.getElementById('terminal-cursor');
 
@@ -146,6 +103,7 @@ function setupInteractiveTerminal() {
   hiddenInput.setAttribute('autocomplete', 'off');
   hiddenInput.setAttribute('autocorrect', 'off');
   hiddenInput.setAttribute('spellcheck', 'false');
+  hiddenInput.setAttribute('inputmode', 'none');
   hiddenInput.style.cssText = 'position:fixed;opacity:0;pointer-events:none;left:-9999px;top:-9999px;width:1px;height:1px;';
   document.body.appendChild(hiddenInput);
 
@@ -671,17 +629,6 @@ function setupInteractiveTerminal() {
     ctx.lineWidth = 4.5 * dpr;
     ctx.stroke();
 
-    // Specular — small glint in upper-left corner only
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, R - 2 * dpr, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.beginPath();
-    ctx.ellipse(cx - R * 0.55, cy - R * 0.55, R * 0.12, R * 0.07, -0.5, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.fill();
-    ctx.restore();
-
     // Rotation axis — diagonal line showing 23.5° tilt
     // North Pole on screen: (cx - R·sin(TILT), cy - R·cos(TILT))
     const ext = 16 * dpr;
@@ -722,7 +669,9 @@ function setupInteractiveTerminal() {
     ctx.fillText('S', sax + labelOff * Math.cos(TILT), say - labelOff * Math.sin(TILT));
     ctx.restore();
 
-    rot += 0.008;
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      rot += 0.008;
+    }
     requestAnimationFrame(draw);
   };
 
