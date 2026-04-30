@@ -499,6 +499,41 @@ function setupInteractiveTerminal() {
       ocean.addColorStop(1, '#1e7ec8');
     }
 
+    // Rotation axis — drawn before globe so it sits behind
+    const ext = 28 * dpr;
+    const nax = cx - (R + ext) * Math.sin(TILT);
+    const nay = cy - (R + ext) * Math.cos(TILT);
+    const sax = cx + (R + ext) * Math.sin(TILT);
+    const say = cy + (R + ext) * Math.cos(TILT);
+    const axisColor = dark ? 'rgba(180,210,255,0.85)' : 'rgba(30,60,160,0.75)';
+
+    ctx.save();
+    ctx.strokeStyle = axisColor;
+    ctx.lineWidth = 3.5 * dpr;
+    ctx.setLineDash([5 * dpr, 4 * dpr]);
+    ctx.beginPath();
+    ctx.moveTo(nax, nay);
+    ctx.lineTo(sax, say);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = axisColor;
+    ctx.beginPath();
+    ctx.arc(nax, nay, 4 * dpr, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(sax, say, 4 * dpr, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.font = `bold ${11 * dpr}px monospace`;
+    ctx.fillStyle = axisColor;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const labelOff = 9 * dpr;
+    ctx.fillText('N', nax - labelOff * Math.cos(TILT), nay + labelOff * Math.sin(TILT));
+    ctx.fillText('S', sax + labelOff * Math.cos(TILT), say - labelOff * Math.sin(TILT));
+    ctx.restore();
+
     ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, R, 0, Math.PI * 2);
@@ -628,45 +663,6 @@ function setupInteractiveTerminal() {
     ctx.lineWidth = 4.5 * dpr;
     ctx.stroke();
 
-    // Rotation axis — diagonal line showing 23.5° tilt
-    // North Pole on screen: (cx - R·sin(TILT), cy - R·cos(TILT))
-    const ext = 16 * dpr;
-    const nax = cx - (R + ext) * Math.sin(TILT);
-    const nay = cy - (R + ext) * Math.cos(TILT);
-    const sax = cx + (R + ext) * Math.sin(TILT);
-    const say = cy + (R + ext) * Math.cos(TILT);
-    const axisColor = dark ? 'rgba(180,210,255,0.85)' : 'rgba(30,60,160,0.75)';
-
-    ctx.save();
-    // Line through the globe (dashed inside)
-    ctx.strokeStyle = axisColor;
-    ctx.lineWidth = 2 * dpr;
-    ctx.setLineDash([5 * dpr, 4 * dpr]);
-    ctx.beginPath();
-    ctx.moveTo(nax, nay);
-    ctx.lineTo(sax, say);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Pole tip circles
-    ctx.fillStyle = axisColor;
-    ctx.beginPath();
-    ctx.arc(nax, nay, 4 * dpr, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(sax, say, 4 * dpr, 0, Math.PI * 2);
-    ctx.fill();
-
-    // N / S labels
-    ctx.font = `bold ${11 * dpr}px monospace`;
-    ctx.fillStyle = axisColor;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const labelOff = 9 * dpr;
-    // nudge labels perpendicular to axis (axis direction: sin(TILT) left, cos(TILT) up)
-    ctx.fillText('N', nax - labelOff * Math.cos(TILT), nay + labelOff * Math.sin(TILT));
-    ctx.fillText('S', sax + labelOff * Math.cos(TILT), say - labelOff * Math.sin(TILT));
-    ctx.restore();
 
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       rot += 0.008;
