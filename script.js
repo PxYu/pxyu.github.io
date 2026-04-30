@@ -103,7 +103,6 @@ function setupInteractiveTerminal() {
   hiddenInput.setAttribute('autocomplete', 'off');
   hiddenInput.setAttribute('autocorrect', 'off');
   hiddenInput.setAttribute('spellcheck', 'false');
-  hiddenInput.setAttribute('inputmode', 'none');
   hiddenInput.style.cssText = 'position:fixed;opacity:0;pointer-events:none;left:-9999px;top:-9999px;width:1px;height:1px;';
   document.body.appendChild(hiddenInput);
 
