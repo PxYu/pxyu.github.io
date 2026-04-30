@@ -388,6 +388,7 @@ function setupInteractiveTerminal() {
   let landFeature = null;
   let wuhanScreen = null;
   let visitorScreen = null;
+  let paused = false;
 
   fetch('./land-110m.json')
     .then(r => r.json())
@@ -500,7 +501,7 @@ function setupInteractiveTerminal() {
     }
 
     // Rotation axis — drawn behind globe, poles extend beyond sphere
-    const ext = 10 * dpr;
+    const ext = 14 * dpr;
     const nax = cx - (R + ext) * Math.sin(TILT);
     const nay = cy - (R + ext) * Math.cos(TILT);
     const sax = cx + (R + ext) * Math.sin(TILT);
@@ -519,17 +520,17 @@ function setupInteractiveTerminal() {
 
     ctx.fillStyle = axisColor;
     ctx.beginPath();
-    ctx.arc(nax, nay, 4 * dpr, 0, Math.PI * 2);
+    ctx.arc(nax, nay, 5 * dpr, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(sax, say, 4 * dpr, 0, Math.PI * 2);
+    ctx.arc(sax, say, 5 * dpr, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.font = `bold ${11 * dpr}px monospace`;
+    ctx.font = `bold ${15 * dpr}px monospace`;
     ctx.fillStyle = axisColor;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const labelOff = 9 * dpr;
+    const labelOff = 12 * dpr;
     ctx.fillText('N', nax - labelOff * Math.cos(TILT), nay + labelOff * Math.sin(TILT));
     ctx.fillText('S', sax + labelOff * Math.cos(TILT), say - labelOff * Math.sin(TILT));
     ctx.restore();
@@ -663,13 +664,16 @@ function setupInteractiveTerminal() {
     ctx.lineWidth = 4.5 * dpr;
     ctx.stroke();
 
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && !paused) {
       rot += 0.008;
     }
     requestAnimationFrame(draw);
   };
 
   draw();
+
+  canvas.addEventListener('mouseenter', () => { paused = true; });
+  canvas.addEventListener('mouseleave', () => { paused = false; });
 
   // Hover tooltips for both pins
   const tooltip = document.getElementById('globe-tooltip');
