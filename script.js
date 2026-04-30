@@ -379,7 +379,7 @@ function setupInteractiveTerminal() {
   const ctx = canvas.getContext('2d');
   const S = canvas.width;
   const cx = S / 2, cy = S / 2;
-  const R = S / 2 - 4 * dpr;
+  const R = S / 2 - 18 * dpr;
 
   const TILT = 23.5 * Math.PI / 180;
 
@@ -498,6 +498,41 @@ function setupInteractiveTerminal() {
       ocean.addColorStop(0, '#5bbde4');
       ocean.addColorStop(1, '#1e7ec8');
     }
+
+    // Rotation axis — drawn behind globe, poles extend beyond sphere
+    const ext = 10 * dpr;
+    const nax = cx - (R + ext) * Math.sin(TILT);
+    const nay = cy - (R + ext) * Math.cos(TILT);
+    const sax = cx + (R + ext) * Math.sin(TILT);
+    const say = cy + (R + ext) * Math.cos(TILT);
+    const axisColor = dark ? 'rgba(180,210,255,0.85)' : 'rgba(30,60,160,0.75)';
+
+    ctx.save();
+    ctx.strokeStyle = axisColor;
+    ctx.lineWidth = 3.5 * dpr;
+    ctx.setLineDash([5 * dpr, 4 * dpr]);
+    ctx.beginPath();
+    ctx.moveTo(nax, nay);
+    ctx.lineTo(sax, say);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = axisColor;
+    ctx.beginPath();
+    ctx.arc(nax, nay, 4 * dpr, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(sax, say, 4 * dpr, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.font = `bold ${11 * dpr}px monospace`;
+    ctx.fillStyle = axisColor;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const labelOff = 9 * dpr;
+    ctx.fillText('N', nax - labelOff * Math.cos(TILT), nay + labelOff * Math.sin(TILT));
+    ctx.fillText('S', sax + labelOff * Math.cos(TILT), say - labelOff * Math.sin(TILT));
+    ctx.restore();
 
     ctx.save();
     ctx.beginPath();
@@ -627,41 +662,6 @@ function setupInteractiveTerminal() {
     ctx.strokeStyle = dark ? '#000' : '#0a1a3a';
     ctx.lineWidth = 4.5 * dpr;
     ctx.stroke();
-
-    // Rotation axis — drawn on top so the dashed line crosses the globe
-    const ext = 20 * dpr;
-    const nax = cx - (R + ext) * Math.sin(TILT);
-    const nay = cy - (R + ext) * Math.cos(TILT);
-    const sax = cx + (R + ext) * Math.sin(TILT);
-    const say = cy + (R + ext) * Math.cos(TILT);
-    const axisColor = dark ? 'rgba(180,210,255,0.85)' : 'rgba(30,60,160,0.75)';
-
-    ctx.save();
-    ctx.strokeStyle = axisColor;
-    ctx.lineWidth = 3.5 * dpr;
-    ctx.setLineDash([5 * dpr, 4 * dpr]);
-    ctx.beginPath();
-    ctx.moveTo(nax, nay);
-    ctx.lineTo(sax, say);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = axisColor;
-    ctx.beginPath();
-    ctx.arc(nax, nay, 4 * dpr, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(sax, say, 4 * dpr, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.font = `bold ${11 * dpr}px monospace`;
-    ctx.fillStyle = axisColor;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const labelOff = 9 * dpr;
-    ctx.fillText('N', nax - labelOff * Math.cos(TILT), nay + labelOff * Math.sin(TILT));
-    ctx.fillText('S', sax + labelOff * Math.cos(TILT), say - labelOff * Math.sin(TILT));
-    ctx.restore();
 
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       rot += 0.008;
