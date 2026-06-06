@@ -29,6 +29,11 @@ applyTheme(getPreferredTheme());
 
 if (themeToggle) {
   themeToggle.addEventListener('click', () => {
+    const icon = themeToggle.querySelector('.theme-toggle-icon');
+    if (icon) {
+      icon.classList.add('spin');
+      setTimeout(() => icon.classList.remove('spin'), 400);
+    }
     const nextTheme = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
     localStorage.setItem(themeStorageKey, nextTheme);
     applyTheme(nextTheme);
@@ -705,4 +710,24 @@ function setupInteractiveTerminal() {
     });
     canvas.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
   }
+})();
+
+// Scroll-reveal observer
+(function () {
+  const reveals = document.querySelectorAll('.reveal');
+  if (!reveals.length) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.12, rootMargin: '0px 0px -20px 0px' }
+  );
+
+  reveals.forEach(el => observer.observe(el));
 })();
