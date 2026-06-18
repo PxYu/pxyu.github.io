@@ -414,6 +414,11 @@ h2 {
     letter-spacing: 0.01em;
 }
 
+.venue {
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+}
+
 .tag {
     display: inline-block;
     margin-right: 8px;
