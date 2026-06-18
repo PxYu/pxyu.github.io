@@ -415,8 +415,8 @@ h2 {
 }
 
 .venue {
-    color: var(--text-secondary);
-    font-size: 0.92rem;
+    color: var(--accent);
+    font-weight: 600;
 }
 
 .tag {
