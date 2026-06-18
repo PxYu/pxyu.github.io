@@ -322,14 +322,8 @@ function setupInteractiveTerminal() {
     clearTimeout(hideTimer);
     const abstract = anchor.dataset.abstract || '';
     const venue = anchor.dataset.venue || '';
-    const authors = (anchor.dataset.authors || '')
-      .split(',')
-      .map(a => a.trim())
-      .map(a => a === 'Puxuan Yu' ? `<strong>${a}</strong>` : a)
-      .join(', ');
     tip.innerHTML =
       (venue ? `<div class="paper-tooltip-venue">${venue}</div>` : '') +
-      (authors ? `<div class="paper-tooltip-authors">${authors}</div>` : '') +
       `<div class="paper-tooltip-abstract">${abstract}</div>`;
     tip.style.display = 'block';
 
