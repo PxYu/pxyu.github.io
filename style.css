@@ -832,21 +832,19 @@ body.dark-theme .terminal-body::after {
 }
 
 #visitor-globe {
-    width: 120px;
-    height: 120px;
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
     display: block;
 }
 
 .globe-city {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     color: var(--text-secondary);
     font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 120px;
     text-align: center;
+    max-width: 160px;
+    line-height: 1.35;
 }
 
 .globe-tooltip {
