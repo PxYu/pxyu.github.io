@@ -53,9 +53,9 @@ if (terminalCommits) {
   const commits = [
     { hash: 'a3f9c2b', ref: '(HEAD → main)', msg: '❄️ SWE @ Snowflake Inc.', date: '2024 – now' },
     { hash: '7d1e834', ref: null, msg: '🎓 Ph.D. in CS @ UMass Amherst', date: '2021 – 2024' },
-    { hash: '4c8a012', ref: null, msg: '🚨 Research Intern @ Dataminr', date: '2023' },
+    { hash: '4c8a012', ref: null, msg: '⛏️ Research Intern @ Dataminr', date: '2023' },
     { hash: '9b2f567', ref: null, msg: '🔍 Research Intern @ Amazon Alexa', date: '2022' },
-    { hash: 'e5a3d91', ref: null, msg: '🎓 M.S. in CS @ UMass Amherst', date: '2018 – 2021' },
+    { hash: 'e5a3d91', ref: null, msg: '📖 M.S. in CS @ UMass Amherst', date: '2018 – 2021' },
     { hash: '2f7c845', ref: null, msg: '🐾 Research Intern @ Baidu Research', date: '2020' },
     { hash: '8d4e123', ref: null, msg: '🌱 B.Eng. in Software Eng @ Wuhan University', date: '2014 – 2018' },
   ];
@@ -108,6 +108,8 @@ function setupInteractiveTerminal() {
   hiddenInput.setAttribute('autocomplete', 'off');
   hiddenInput.setAttribute('autocorrect', 'off');
   hiddenInput.setAttribute('spellcheck', 'false');
+  hiddenInput.setAttribute('tabindex', '-1');
+  hiddenInput.setAttribute('aria-hidden', 'true');
   hiddenInput.style.cssText = 'position:fixed;opacity:0;pointer-events:none;left:-9999px;top:-9999px;width:1px;height:1px;';
   document.body.appendChild(hiddenInput);
 
@@ -704,6 +706,64 @@ function setupInteractiveTerminal() {
     });
     canvas.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
   }
+})();
+
+// Latest list pagination
+(function () {
+  const list = document.querySelector('.latest-list');
+  if (!list) return;
+
+  const items = Array.from(list.children);
+  const perPage = 10;
+  const pageCount = Math.ceil(items.length / perPage);
+
+  const markEdges = (start, end) => {
+    items.forEach((item, i) => {
+      item.classList.toggle('is-first-visible', i === start);
+      item.classList.toggle('is-last-visible', i === end);
+    });
+  };
+
+  if (pageCount <= 1) {
+    markEdges(0, items.length - 1);
+    return;
+  }
+
+  const nav = document.createElement('div');
+  nav.className = 'latest-pagination';
+  nav.innerHTML =
+    '<button type="button" class="latest-page-btn" data-dir="-1" aria-label="Previous page">&lsaquo;</button>' +
+    '<span class="latest-page-indicator" aria-live="polite"></span>' +
+    '<button type="button" class="latest-page-btn" data-dir="1" aria-label="Next page">&rsaquo;</button>';
+  list.after(nav);
+
+  const indicator = nav.querySelector('.latest-page-indicator');
+  const prevBtn = nav.querySelector('[data-dir="-1"]');
+  const nextBtn = nav.querySelector('[data-dir="1"]');
+
+  let page = 0;
+
+  const render = () => {
+    const start = page * perPage;
+    const end = Math.min(start + perPage, items.length) - 1;
+    items.forEach((item, i) => {
+      item.style.display = (i >= start && i <= end) ? '' : 'none';
+    });
+    markEdges(start, end);
+    indicator.textContent = `${page + 1} / ${pageCount}`;
+
+    const prevDisabled = page === 0;
+    const nextDisabled = page === pageCount - 1;
+    if (document.activeElement === prevBtn && prevDisabled) nextBtn.focus();
+    if (document.activeElement === nextBtn && nextDisabled) prevBtn.focus();
+    prevBtn.disabled = prevDisabled;
+    nextBtn.disabled = nextDisabled;
+  };
+
+  prevBtn.addEventListener('click', () => { if (page > 0) { page--; render(); } });
+  nextBtn.addEventListener('click', () => { if (page < pageCount - 1) { page++; render(); } });
+
+  render();
 })();
 
 // Scroll-reveal observer
