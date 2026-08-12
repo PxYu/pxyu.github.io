@@ -11,7 +11,9 @@ const applyTheme = (theme) => {
     const isDark = theme === 'dark';
     themeToggle.setAttribute('aria-pressed', String(isDark));
     if (themeToggleLabel) {
-      themeToggleLabel.textContent = isDark ? 'Dark' : 'Light';
+      // Label names the action a click performs (switch to the other
+      // mode), not the mode you're currently in.
+      themeToggleLabel.textContent = isDark ? 'Light' : 'Dark';
     }
   }
 };
@@ -111,7 +113,10 @@ function setupInteractiveTerminal() {
   hiddenInput.setAttribute('tabindex', '-1');
   hiddenInput.setAttribute('aria-hidden', 'true');
   hiddenInput.style.cssText = 'position:fixed;opacity:0;pointer-events:none;left:-9999px;top:-9999px;width:1px;height:1px;';
-  document.body.appendChild(hiddenInput);
+  // Appended inside terminalBody (position:fixed keeps it off-screen
+  // regardless of DOM parent) so `.terminal-body:focus-within` in CSS
+  // still matches once focus moves here.
+  terminalBody.appendChild(hiddenInput);
 
   let currentPromptEl = null;
   let inputMirror = null;
@@ -248,6 +253,13 @@ function setupInteractiveTerminal() {
 
   makePrompt();
 
+  // Make the terminal reachable from the keyboard, not just the mouse:
+  // Tab lands here, then focus forwards straight to the hidden input so
+  // typing works immediately, matching the click behavior below.
+  // `.terminal-body:focus-within` keeps a visible ring while the hidden
+  // input holds focus.
+  terminalBody.setAttribute('tabindex', '0');
+  terminalBody.addEventListener('focus', () => hiddenInput.focus());
   terminalBody.addEventListener('click', () => hiddenInput.focus());
 
   document.addEventListener('keydown', (e) => {
@@ -390,6 +402,8 @@ function setupInteractiveTerminal() {
   let wuhanScreen = null;
   let visitorScreen = null;
   let paused = false;
+  let visible = true;
+  const reducedMotionMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   fetch('./land-110m.json')
     .then(r => r.json())
@@ -627,7 +641,7 @@ function setupInteractiveTerminal() {
     const wuhanHR = 9 * dpr;
     wuhanScreen = wuhan.vis ? { sx: wuhan.sx, sy: wuhan.sy - wuhanHR * 2.2 } : null;
     if (wuhan.vis) {
-      const p2 = (Math.sin(Date.now() / 600 + 1.5) + 1) / 2;
+      const p2 = reducedMotionMQ.matches ? 0 : (Math.sin(Date.now() / 600 + 1.5) + 1) / 2;
       drawPin(wuhan.sx, wuhan.sy, wuhanHR, '#f5c400', `rgba(245,196,0,${0.55 - p2 * 0.45})`, p2);
 
       const distFromCenter = Math.hypot(wuhan.sx - cx, wuhan.sy - cy);
@@ -651,7 +665,7 @@ function setupInteractiveTerminal() {
       const vp = project(visitorLat, visitorLng);
       visitorScreen = vp.vis ? { sx: vp.sx, sy: vp.sy - visitorHR * 2.2 } : null;
       if (vp.vis) {
-        const p = (Math.sin(Date.now() / 450) + 1) / 2;
+        const p = reducedMotionMQ.matches ? 0 : (Math.sin(Date.now() / 450) + 1) / 2;
         drawPin(vp.sx, vp.sy, visitorHR, '#ff3a2e', `rgba(255,60,40,${0.55 - p * 0.45})`, p);
       }
     }
@@ -665,13 +679,22 @@ function setupInteractiveTerminal() {
     ctx.lineWidth = 4.5 * dpr;
     ctx.stroke();
 
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && !paused) {
+    if (!reducedMotionMQ.matches && !paused) {
       rot += 0.008;
     }
-    requestAnimationFrame(draw);
+    if (visible) requestAnimationFrame(draw);
   };
 
   draw();
+
+  // Pause the redraw loop while the globe is scrolled out of view, and
+  // resume with a fresh frame when it scrolls back in.
+  const visibilityObserver = new IntersectionObserver(([entry]) => {
+    const wasVisible = visible;
+    visible = entry.isIntersecting;
+    if (visible && !wasVisible) requestAnimationFrame(draw);
+  }, { threshold: 0.01 });
+  visibilityObserver.observe(canvas);
 
   canvas.addEventListener('mouseenter', () => { paused = true; });
   canvas.addEventListener('mouseleave', () => { paused = false; });
