@@ -484,6 +484,16 @@ function setupInteractiveTerminal() {
     if (penDown) ctx.closePath();
   };
 
+  // ISO 3166-1 alpha-2 -> flag emoji (regional indicator symbols).
+  const countryFlag = code => code
+    ? String.fromCodePoint(...[...code.toUpperCase()].map(c => 127397 + c.charCodeAt(0)))
+    : '';
+
+  // "City, ST, USA" for the US (state abbreviation); "City, 🇨🇳" elsewhere.
+  const formatCityLocation = (city, regionCode, countryCode) => countryCode === 'US'
+    ? `${city}, ${regionCode}, USA`
+    : `${city}, ${countryFlag(countryCode)}`;
+
   fetch('https://ipapi.co/json/')
     .then(r => r.json())
     .then(d => {
@@ -492,7 +502,7 @@ function setupInteractiveTerminal() {
       visitorLng = d.longitude;
       rot = -visitorLng * Math.PI / 180;
       const label = document.getElementById('globe-city');
-      if (label && d.city) label.textContent = `${d.city}, ${d.country_name}`;
+      if (label && d.city) label.textContent = formatCityLocation(d.city, d.region_code, d.country_code);
     })
     .catch(() => {});
 
@@ -713,7 +723,7 @@ function setupInteractiveTerminal() {
       const ly = e.clientY - rect.top - 28;
 
       if (wuhanScreen && Math.hypot(mx - wuhanScreen.sx, my - wuhanScreen.sy) < hitR) {
-        tooltip.textContent = '🏠 Wuhan, China';
+        tooltip.textContent = `🏠 Wuhan, ${countryFlag('CN')}`;
         tooltip.style.left = lx + 'px';
         tooltip.style.top = ly + 'px';
         tooltip.style.opacity = '1';
