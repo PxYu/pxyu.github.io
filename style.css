@@ -1,4 +1,8 @@
 :root {
+    --font-text: "STIX Two Text", Georgia, "Times New Roman", serif;
+    --font-name: "Fraunces", var(--font-text);
+    --font-cjk-name: "Songti SC", "STSong", "Noto Serif CJK SC", "Times New Roman", serif;
+    --font-mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, monospace;
     --text: #1a1614;
     --text-secondary: #6b5f58;
     --heading: #0d0b0a;
@@ -84,7 +88,7 @@ html {
 }
 
 body {
-    font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: var(--font-text);
     font-weight: 400;
     color: var(--text);
     background:
@@ -242,11 +246,10 @@ body::after {
 }
 
 h1 {
-    font-family: "Fraunces", "DM Sans", serif;
+    font-family: var(--font-text);
     font-size: clamp(2rem, 5vw, 3rem);
     line-height: 1.15;
     font-weight: 700;
-    font-variation-settings: 'SOFT' 28;
     color: var(--heading);
     margin-bottom: 0;
 }
@@ -265,6 +268,8 @@ h1 {
 .name-word {
     position: relative;
     display: inline-block;
+    font-family: var(--font-name);
+    font-variation-settings: 'SOFT' 28;
 }
 
 .name-word::after {
@@ -290,17 +295,17 @@ h1 {
 }
 
 .aka-label {
-    font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-size: 0.61rem;
+    font-family: var(--font-text);
+    font-size: 0.58rem;
     line-height: 1;
     font-weight: 700;
-    letter-spacing: 0.09em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-secondary);
 }
 
 .name-heading .degree {
-    font-family: "Fraunces", "DM Sans", serif;
+    font-family: var(--font-text);
     font-size: 0.95rem;
     font-style: italic;
     font-weight: 600;
@@ -328,6 +333,11 @@ h1 {
     padding-bottom: 4px;
 }
 
+.chinese-part-given {
+    display: inline-flex;
+    gap: 0.08em;
+}
+
 .chinese-part::after {
     content: '';
     position: absolute;
@@ -341,14 +351,14 @@ h1 {
 }
 
 .chinese-part ruby {
-    font-family: "Songti SC", "STSong", "Noto Serif CJK SC", "Times New Roman", serif;
+    font-family: var(--font-cjk-name);
     font-size: 1.4rem;
     line-height: 1;
     font-weight: 600;
 }
 
 .chinese-part rt {
-    font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: var(--font-text);
     font-size: 0.48em;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -368,16 +378,11 @@ h1 {
     color: var(--text-secondary);
 }
 
-.aka-label {
-    color: var(--text-secondary);
-    font-size: 0.58rem;
-    letter-spacing: 0.08em;
-}
-
 .alias-name {
-    font-family: "Fraunces", "DM Sans", serif;
+    font-family: var(--font-name);
     font-size: 1.05rem;
     font-weight: 600;
+    font-variation-settings: 'SOFT' 28;
     color: var(--heading);
 }
 
@@ -469,10 +474,9 @@ section {
 }
 
 h2 {
-    font-family: "Fraunces", "DM Sans", serif;
+    font-family: var(--font-text);
     font-size: 1.25rem;
-    font-weight: 600;
-    font-variation-settings: 'SOFT' 18;
+    font-weight: 700;
     color: var(--heading);
     margin-bottom: 16px;
     padding-bottom: 10px;
@@ -876,14 +880,14 @@ body.dark-theme .profile-photo {
     text-align: center;
     font-size: 0.8rem;
     color: #7a7572;
-    font-family: ui-monospace, 'SFMono-Regular', 'SF Mono', Menlo, Consolas, monospace;
+    font-family: var(--font-mono);
 }
 
 .terminal-body {
     position: relative;
     background: var(--terminal-bg);
     padding: 18px 22px 20px;
-    font-family: ui-monospace, 'SFMono-Regular', 'SF Mono', Menlo, Consolas, monospace;
+    font-family: var(--font-mono);
     font-size: 0.85rem;
     line-height: 1.75;
     color: var(--terminal-text);
@@ -1045,7 +1049,7 @@ body.dark-theme .terminal-body::after {
 .globe-city {
     font-size: 0.72rem;
     color: var(--text-secondary);
-    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-family: var(--font-text);
     text-align: center;
     max-width: 160px;
     line-height: 1.35;
@@ -1055,7 +1059,7 @@ body.dark-theme .terminal-body::after {
     position: absolute;
     background: var(--tt-bg);
     color: var(--tt-text);
-    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-family: var(--font-text);
     font-size: 0.7rem;
     padding: 3px 8px;
     border-radius: 4px;
