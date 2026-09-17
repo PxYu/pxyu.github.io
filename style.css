@@ -26,6 +26,8 @@
     --tt-bg: #1e1e1e;
     --tt-text: #eee;
     --tt-border: #333;
+    --given-name: #b85d40;
+    --family-name: #35715f;
 }
 
 body.dark-theme {
@@ -55,6 +57,8 @@ body.dark-theme {
     --tt-bg: #2a2522;
     --tt-text: #e8e0db;
     --tt-border: rgba(232, 137, 106, 0.18);
+    --given-name: #f09676;
+    --family-name: #75c6aa;
 }
 
 * {
@@ -244,23 +248,137 @@ h1 {
     font-weight: 700;
     font-variation-settings: 'SOFT' 28;
     color: var(--heading);
-    margin-bottom: 6px;
+    margin-bottom: 0;
 }
 
-h1 .degree {
+.name-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 0.2em;
+    flex-wrap: wrap;
+}
+
+.name-part {
+    display: inline-block;
+}
+
+.name-word {
+    position: relative;
+    display: inline-block;
+}
+
+.name-word::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: 0.62;
+}
+
+.name-part-given .name-word,
+.chinese-part-given ruby {
+    color: var(--given-name);
+}
+
+.name-part-family .name-word,
+.chinese-part-family ruby {
+    color: var(--family-name);
+}
+
+.aka-label {
+    font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 0.61rem;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.name-heading .degree {
     font-family: "Fraunces", "DM Sans", serif;
     font-size: 0.95rem;
     font-style: italic;
     font-weight: 600;
     color: var(--accent-text);
-    vertical-align: middle;
+    margin-left: 0.2em;
+}
+
+.name-explainer {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin: 14px 0 10px;
+}
+
+.chinese-name {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.22em;
+    flex: 0 0 auto;
+}
+
+.chinese-part {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 4px;
+}
+
+.chinese-part::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: 0.62;
+}
+
+.chinese-part ruby {
+    font-family: "Songti SC", "STSong", "Noto Serif CJK SC", "Times New Roman", serif;
+    font-size: 1.4rem;
+    line-height: 1;
+    font-weight: 600;
+}
+
+.chinese-part rt {
+    font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 0.48em;
+    font-weight: 700;
+    letter-spacing: 0.02em;
 }
 
 .name-subtitle {
-    font-size: 1rem;
-    font-weight: 600;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+
+.name-subtitle::before {
+    content: '·';
+    margin-right: 3px;
     color: var(--text-secondary);
-    margin-bottom: 6px;
+}
+
+.aka-label {
+    color: var(--text-secondary);
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+}
+
+.alias-name {
+    font-family: "Fraunces", "DM Sans", serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--heading);
 }
 
 .affiliation {
@@ -624,6 +742,8 @@ body.dark-theme .profile-photo {
         --tt-bg: #2a2522;
         --tt-text: #e8e0db;
         --tt-border: rgba(232, 137, 106, 0.18);
+        --given-name: #f09676;
+        --family-name: #75c6aa;
     }
 
     body:not(.light-theme) .contact-links a {
