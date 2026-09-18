@@ -262,17 +262,6 @@ function setupInteractiveTerminal() {
   terminalBody.addEventListener('focus', () => hiddenInput.focus());
   terminalBody.addEventListener('click', () => hiddenInput.focus());
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
-    if (document.activeElement === hiddenInput) return;
-    const rect = terminalBody.getBoundingClientRect();
-    if (rect.bottom > 0 && rect.top < window.innerHeight) {
-      e.preventDefault();
-      hiddenInput.focus();
-      hiddenInput.dispatchEvent(new KeyboardEvent('keydown', { key: e.key, bubbles: true }));
-    }
-  });
-
   hiddenInput.addEventListener('input', () => {
     if (inputMirror) inputMirror.textContent = hiddenInput.value;
   });
@@ -336,9 +325,17 @@ function setupInteractiveTerminal() {
     clearTimeout(hideTimer);
     const abstract = anchor.dataset.abstract || '';
     const venue = anchor.dataset.venue || '';
-    tip.innerHTML =
-      (venue ? `<div class="paper-tooltip-venue">${venue}</div>` : '') +
-      `<div class="paper-tooltip-abstract">${abstract}</div>`;
+    tip.replaceChildren();
+    if (venue) {
+      const venueEl = document.createElement('div');
+      venueEl.className = 'paper-tooltip-venue';
+      venueEl.textContent = venue;
+      tip.appendChild(venueEl);
+    }
+    const abstractEl = document.createElement('div');
+    abstractEl.className = 'paper-tooltip-abstract';
+    abstractEl.textContent = abstract;
+    tip.appendChild(abstractEl);
     tip.style.display = 'block';
 
     const rect = anchor.getBoundingClientRect();
@@ -371,6 +368,9 @@ function setupInteractiveTerminal() {
 
   tip.addEventListener('mouseenter', () => clearTimeout(hideTimer));
   tip.addEventListener('mouseleave', hide);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') hide();
+  });
 
   document.querySelectorAll('a[data-abstract]').forEach(el => {
     el.addEventListener('mouseenter', () => show(el));
