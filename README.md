@@ -1,6 +1,6 @@
 # pxyu.github.io
 
-Personal site of **Puxuan Yu (Martin)** — AI & Search Engineer at Snowflake.
+Personal site of **Puxuan Yu (Martin)** — Senior AI & Search Engineer at Snowflake.
 
 **[pxyu.github.io](https://pxyu.github.io)**
 

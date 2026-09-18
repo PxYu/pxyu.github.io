@@ -53,7 +53,7 @@ const terminalCursor = document.getElementById('terminal-cursor');
 
 if (terminalCommits) {
   const commits = [
-    { hash: 'a3f9c2b', ref: '(HEAD → main)', msg: '❄️ SWE @ Snowflake Inc.', date: '2024 – now' },
+    { hash: 'a3f9c2b', ref: '(HEAD → main)', msg: '❄️ Senior SWE @ Snowflake Inc.', date: '2024 – now' },
     { hash: '7d1e834', ref: null, msg: '🎓 Ph.D. in CS @ UMass Amherst', date: '2021 – 2024' },
     { hash: '4c8a012', ref: null, msg: '⛏️ Research Intern @ Dataminr', date: '2023' },
     { hash: '9b2f567', ref: null, msg: '🔍 Research Intern @ Amazon Alexa', date: '2022' },
@@ -226,7 +226,7 @@ function setupInteractiveTerminal() {
       '<span class="tc-hash">PXYU(1)                User Commands               PXYU(1)</span>',
       '',
       '<span class="tc-ref">NAME</span>',
-      '    pxyu — software engineer and researcher',
+      '    pxyu — senior software engineer and researcher',
       '',
       '<span class="tc-ref">SYNOPSIS</span>',
       '    pxyu [--email] [--scholar] [--linkedin] [--twitter]',
