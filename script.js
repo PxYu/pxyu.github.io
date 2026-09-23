@@ -48,160 +48,113 @@ systemDarkMode.addEventListener('change', (event) => {
   }
 });
 
-const terminalCommits = document.getElementById('terminal-commits');
-const terminalCursor = document.getElementById('terminal-cursor');
+(function () {
+  const log = document.getElementById('terminal-log');
+  const terminalBody = document.querySelector('.terminal-body');
+  if (!log || !terminalBody) return;
 
-if (terminalCommits) {
-  const commits = [
-    { hash: 'a3f9c2b', ref: '(HEAD → main)', msg: '❄️ Senior SWE @ Snowflake Inc.', date: '2024 – now' },
-    { hash: '7d1e834', ref: null, msg: '🎓 Ph.D. in CS @ UMass Amherst', date: '2021 – 2024' },
-    { hash: '4c8a012', ref: null, msg: '⛏️ Research Intern @ Dataminr', date: '2023' },
-    { hash: '9b2f567', ref: null, msg: '🔍 Research Intern @ Amazon Alexa', date: '2022' },
-    { hash: 'e5a3d91', ref: null, msg: '📖 M.S. in CS @ UMass Amherst', date: '2018 – 2021' },
-    { hash: '2f7c845', ref: null, msg: '🐾 Research Intern @ Baidu Research', date: '2020' },
-    { hash: '8d4e123', ref: null, msg: '🌱 B.Eng. in Software Eng @ Wuhan University', date: '2014 – 2018' },
-  ];
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const lineCount = log.querySelectorAll('.tc-line').length;
+  const stagger = 160;
+  const initialDelay = 200;
 
-  const makeLine = ({ hash, ref, msg, date }) => {
-    const line = document.createElement('div');
-    line.className = 'tc-line';
-    line.innerHTML =
-      `<span class="tc-left">` +
-        `<span class="tc-star">*</span>` +
-        ` <span class="tc-hash">${hash}</span>` +
-        (ref ? ` <span class="tc-ref">${ref}</span>` : '') +
-        ` <span class="tc-msg">${msg}</span>` +
-      `</span>` +
-      `<span class="tc-date">${date}</span>`;
-    return line;
-  };
+  const esc = (s) => String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 
-  let started = false;
-  const startAnimation = () => {
-    if (started) return;
-    started = true;
-    commits.forEach((commit, i) => {
-      setTimeout(() => {
-        terminalCommits.appendChild(makeLine(commit));
-        if (i === commits.length - 1) {
-          if (terminalCursor) terminalCursor.classList.add('visible');
-          setTimeout(setupInteractiveTerminal, 700);
-        }
-      }, 200 + i * 160);
+  const stripSlash = (s) => s.replace(/\/+$/, '');
+
+  const setupInteractiveTerminal = () => {
+    if (terminalBody.dataset.interactive) return;
+    terminalBody.dataset.interactive = '1';
+
+    const easterEggs = ['whoami', 'sudo hire-me', 'git blame life', 'fortune', 'man pxyu', 'ping pxyu.github.io', 'vim', 'uname -a'];
+
+    const hint = document.createElement('div');
+    hint.className = 'tc-hint';
+
+    const output = document.createElement('div');
+    output.id = 'terminal-output';
+    output.setAttribute('aria-live', 'polite');
+
+    const prompt = document.createElement('form');
+    prompt.className = 'tc-interactive-prompt';
+    prompt.setAttribute('action', '#');
+    prompt.innerHTML = '<span class="tc-prompt" aria-hidden="true">~</span>';
+
+    const input = document.createElement('input');
+    input.id = 'terminal-input';
+    input.className = 'tc-input';
+    input.type = 'text';
+    input.autocomplete = 'off';
+    input.autocapitalize = 'none';
+    input.autocorrect = 'off';
+    input.spellcheck = false;
+    input.setAttribute('enterkeyhint', 'go');
+    input.setAttribute('aria-label', 'Terminal command');
+    prompt.appendChild(input);
+
+    terminalBody.append(output, hint, prompt);
+
+    const refreshHint = () => {
+      const pool = easterEggs.slice();
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      hint.innerHTML = `<span class="tc-date"># try: help · ${pool.slice(0, 4).join(' · ')}</span>`;
+    };
+    refreshHint();
+
+    const scrollToPrompt = () => {
+      prompt.scrollIntoView({ block: 'nearest' });
+    };
+
+    const appendLines = (lines, cls = 'tc-output-line') => {
+      if (!lines || !lines.length) return;
+      lines.forEach((html) => {
+        const div = document.createElement('div');
+        div.className = cls;
+        div.innerHTML = html;
+        output.appendChild(div);
+      });
+      scrollToPrompt();
+    };
+
+    const listLatest = () => Array.from(document.querySelectorAll('.latest-list li')).map((li) => {
+      const tag = li.querySelector('.tag')?.textContent.trim() || '';
+      const title = li.querySelector('a')?.textContent.trim() || '';
+      const venue = li.querySelector('.venue')?.textContent.trim() || '';
+      return `<span class="tc-hash">${esc(tag)}</span>  ${esc(title)}${venue ? `  <span class="tc-date">${esc(venue)}</span>` : ''}`;
     });
-  };
 
-  const terminalObserver = new IntersectionObserver(
-    ([entry]) => { if (entry.isIntersecting) { startAnimation(); terminalObserver.disconnect(); } },
-    { threshold: 0.1 }
-  );
-  terminalObserver.observe(terminalCommits.closest('.panel'));
-}
+    const openTarget = (name) => {
+      const targets = {
+        email: 'mailto:pxyuwhu@gmail.com',
+        scholar: 'https://scholar.google.com/citations?user=S102tmcAAAAJ',
+        linkedin: 'https://www.linkedin.com/in/pxyu',
+        twitter: 'https://twitter.com/pxyumass',
+        github: 'https://github.com/PxYu',
+        papers: '#latest',
+        bio: '#about',
+        contact: '.contact-links',
+      };
+      const href = targets[name];
+      if (!href) return null;
+      if (href.startsWith('#') || href.startsWith('.')) {
+        document.querySelector(href)?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
+        return [`<span class="tc-msg">scrolling to ${esc(name)}...</span>`];
+      }
+      if (href.startsWith('mailto:')) {
+        window.location.href = href;
+        return ['<span class="tc-msg">opening email client...</span>'];
+      }
+      window.open(href, '_blank', 'noopener,noreferrer');
+      return [`<span class="tc-msg">opening ${esc(name)}...</span>`];
+    };
 
-function setupInteractiveTerminal() {
-  if (!terminalCommits) return;
-  const terminalBody = terminalCommits.closest('.terminal-body');
-  if (!terminalBody) return;
-
-  if (terminalCursor) terminalCursor.style.display = 'none';
-
-  const hiddenInput = document.createElement('input');
-  hiddenInput.type = 'text';
-  hiddenInput.setAttribute('autocomplete', 'off');
-  hiddenInput.setAttribute('autocorrect', 'off');
-  hiddenInput.setAttribute('spellcheck', 'false');
-  hiddenInput.setAttribute('tabindex', '-1');
-  hiddenInput.setAttribute('aria-hidden', 'true');
-  hiddenInput.style.cssText = 'position:fixed;opacity:0;pointer-events:none;left:-9999px;top:-9999px;width:1px;height:1px;';
-  // Appended inside terminalBody (position:fixed keeps it off-screen
-  // regardless of DOM parent) so `.terminal-body:focus-within` in CSS
-  // still matches once focus moves here.
-  terminalBody.appendChild(hiddenInput);
-
-  let currentPromptEl = null;
-  let inputMirror = null;
-  const history = [];
-  let historyIndex = -1;
-
-  const makePrompt = () => {
-    const div = document.createElement('div');
-    div.className = 'tc-interactive-prompt';
-    div.innerHTML = '<span class="tc-prompt">~</span>&nbsp;<span class="tc-input-mirror"></span><span class="terminal-cursor visible">█</span>';
-    terminalCommits.appendChild(div);
-    currentPromptEl = div;
-    inputMirror = div.querySelector('.tc-input-mirror');
-  };
-
-  const appendLine = (html, cls = 'tc-output-line') => {
-    const div = document.createElement('div');
-    div.className = cls;
-    div.innerHTML = html;
-    terminalCommits.insertBefore(div, currentPromptEl);
-  };
-
-  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-  const commands = {
-    help: () => [
-      '<span class="tc-hash">available commands:</span>',
-      '  <span class="tc-ref">whoami</span>           who is this person',
-      '  <span class="tc-ref">ls</span>               list sections',
-      '  <span class="tc-ref">cat bio.txt</span>      full bio',
-      '  <span class="tc-ref">pwd</span>              print directory',
-      '  <span class="tc-ref">open email</span>       contact via email',
-      '  <span class="tc-ref">clear</span>            clear terminal',
-      `<span class="tc-date">hint: try \`${easterEggs[Math.floor(Math.random() * easterEggs.length)]}\`</span>`,
-    ],
-    '?': () => commands.help(),
-    whoami: () => [
-      'guest',
-      '<span class="tc-date">（but aren\'t we all just guests on this pale blue dot?）</span>',
-    ],
-    ls: () => ['<span class="tc-ref">bio/</span>  <span class="tc-ref">papers/</span>  <span class="tc-ref">contact/</span>'],
-    'ls -la': () => [
-      'total 3',
-      'drwxr-xr-x  <span class="tc-ref">bio/</span>',
-      'drwxr-xr-x  <span class="tc-ref">papers/</span>',
-      'drwxr-xr-x  <span class="tc-ref">contact/</span>',
-    ],
-    'cat bio.txt': () => [
-      'Building AI and search systems at Snowflake Inc.',
-      'Ph.D. from Manning CICS, UMass Amherst.',
-      'Research @ CIIR, advised by James Allan &amp; Negin Rahimi.',
-      'Prev: Dataminr · Amazon Alexa · Baidu Research.',
-    ],
-    pwd: () => ['/home/pxyu'],
-    'open email': () => {
-      window.open('mailto:pxyuwhu@gmail.com');
-      return ['<span class="tc-msg">opening email client...</span>'];
-    },
-    'echo $shell': () => ['/bin/zsh'],
-    'echo $home': () => ['/home/pxyu'],
-    'uname -a': () => ['Linux pxyu.github.io 6.0 #1 SMP x86_64 GNU/Linux'],
-    'sudo hire-me': () => [
-      '<span style="color:#ff5f56">you are not in the sudoers file.</span>',
-      '<span style="color:#ff5f56">This incident will be reported.</span>',
-    ],
-    'rm -rf /': () => ['<span style="color:#ff5f56">Permission denied. Nice try.</span>'],
-    exit: () => ["There is no escape. You're already here."],
-    vim: () => [
-      '<span class="tc-date">VIM - Vi IMproved 9.1</span>',
-      '~',
-      '~',
-      '<span class="tc-date">To exit: Esc → :q! → Enter</span>',
-    ],
-    nano: () => ['<span class="tc-date">GNU nano 7.2  [New File]</span>', '^X Exit'],
-    'git blame life': () => [
-      '<span class="tc-hash">a1b2c3d</span> (Universe 10000000 00:00:00) 1) things happen',
-      '<span class="tc-hash">a1b2c3d</span> (Universe 10000000 00:00:00) 2) deal with it',
-    ],
-    'ping pxyu.github.io': () => [
-      'PING pxyu.github.io: 56 data bytes',
-      '64 bytes: icmp_seq=0 ttl=60 time=12.4 ms',
-      '64 bytes: icmp_seq=1 ttl=60 time=11.8 ms',
-      '<span class="tc-msg">2 packets transmitted, 2 received, 0% packet loss</span>',
-    ],
-    fortune: () => {
+    const fortune = () => {
       const proverbs = [
         ['千里之行，始于足下。', 'A journey of a thousand miles begins with a single step.'],
         ['活到老，学到老。', 'Live until old, learn until old.'],
@@ -212,106 +165,307 @@ function setupInteractiveTerminal() {
         ['滴水穿石。', 'Dripping water can pierce through stone.'],
         ['人无远虑，必有近忧。', 'One who does not plan for the future will find trouble at their doorstep.'],
         ['一寸光阴一寸金，寸金难买寸光阴。', 'An inch of time is worth an inch of gold, but gold cannot buy time.'],
-        ['鱼和熊掌不可兼得。', 'You cannot have both the fish and the bear\'s paw.'],
+        ['鱼和熊掌不可兼得。', "You cannot have both the fish and the bear's paw."],
         ['学如逆水行舟，不进则退。', 'Learning is like rowing upstream: not to advance is to fall behind.'],
         ['书山有路勤为径，学海无涯苦作舟。', 'The road up the mountain of books is paved with diligence; the sea of learning has no shore but hard work as your boat.'],
         ['众人拾柴火焰高。', 'When everyone gathers firewood, the flames burn high.'],
-        ['不入虎穴，焉得虎子。', 'How can you catch tiger cubs without entering the tiger\'s lair?'],
+        ['不入虎穴，焉得虎子。', "How can you catch tiger cubs without entering the tiger's lair?"],
         ['授人以鱼不如授人以渔。', 'Give a man a fish and you feed him for a day; teach him to fish and you feed him for a lifetime.'],
       ];
       const [zh, en] = proverbs[Math.floor(Math.random() * proverbs.length)];
       return [zh, `<span class="tc-date">${en}</span>`];
-    },
-    'man pxyu': () => [
-      '<span class="tc-hash">PXYU(1)                User Commands               PXYU(1)</span>',
-      '',
-      '<span class="tc-ref">NAME</span>',
-      '    pxyu — senior software engineer and researcher',
-      '',
-      '<span class="tc-ref">SYNOPSIS</span>',
-      '    pxyu [--email] [--scholar] [--linkedin] [--twitter]',
-      '',
-      '<span class="tc-ref">DESCRIPTION</span>',
-      '    Builds AI and search systems at Snowflake. Ph.D. in CS.',
-    ],
-    clear: () => null,
-  };
+    };
 
-  const easterEggs = ['whoami', 'sudo hire-me', 'git blame life', 'fortune', 'man pxyu', 'ping pxyu.github.io', 'vim', 'uname -a'];
-  const hintLine = document.createElement('div');
-  hintLine.className = 'tc-output-line tc-hint';
-  const refreshHint = () => {
-    const pool = easterEggs.slice();
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    hintLine.innerHTML = `<span class="tc-date"># try: help · ${pool.slice(0, 4).join(' · ')}</span>`;
-  };
-  refreshHint();
-  terminalCommits.appendChild(hintLine);
+    const helpLines = () => [
+      '<span class="tc-hash">available commands:</span>',
+      '  <span class="tc-ref">whoami</span>                 who is this person',
+      '  <span class="tc-ref">ls</span> [papers|bio|contact]  list files',
+      '  <span class="tc-ref">cat bio.txt</span>            full bio',
+      '  <span class="tc-ref">cat papers</span>             latest work',
+      '  <span class="tc-ref">open</span> email|scholar|github',
+      '  <span class="tc-ref">cd</span> papers|bio|contact    jump to a section',
+      '  <span class="tc-ref">clear</span>                   clear output',
+      `<span class="tc-date">hint: try \`${easterEggs[Math.floor(Math.random() * easterEggs.length)]}\`</span>`,
+    ];
 
-  makePrompt();
+    const exactCommands = {
+      'sudo hire-me': () => [
+        '<span class="tc-error">you are not in the sudoers file.</span>',
+        '<span class="tc-error">This incident will be reported.</span>',
+      ],
+      'rm -rf /': () => ['<span class="tc-error">Permission denied. Nice try.</span>'],
+      'git blame life': () => [
+        '<span class="tc-hash">a1b2c3d</span> (Universe 10000000 00:00:00) 1) things happen',
+        '<span class="tc-hash">a1b2c3d</span> (Universe 10000000 00:00:00) 2) deal with it',
+      ],
+      'echo $shell': () => ['/bin/zsh'],
+      'echo $home': () => ['/home/pxyu'],
+      'uname -a': () => ['Linux pxyu.github.io 6.0 #1 SMP x86_64 GNU/Linux'],
+      'ping pxyu.github.io': () => [
+        'PING pxyu.github.io: 56 data bytes',
+        '64 bytes: icmp_seq=0 ttl=60 time=12.4 ms',
+        '64 bytes: icmp_seq=1 ttl=60 time=11.8 ms',
+        '<span class="tc-msg">2 packets transmitted, 2 received, 0% packet loss</span>',
+      ],
+      'man pxyu': () => [
+        '<span class="tc-hash">PXYU(1)                User Commands               PXYU(1)</span>',
+        '',
+        '<span class="tc-ref">NAME</span>',
+        '    pxyu — senior software engineer and researcher',
+        '',
+        '<span class="tc-ref">SYNOPSIS</span>',
+        '    pxyu [--email] [--scholar] [--linkedin] [--twitter]',
+        '',
+        '<span class="tc-ref">DESCRIPTION</span>',
+        '    Builds AI and search systems at Snowflake. Ph.D. in CS.',
+      ],
+    };
 
-  // Make the terminal reachable from the keyboard, not just the mouse:
-  // Tab lands here, then focus forwards straight to the hidden input so
-  // typing works immediately, matching the click behavior below.
-  // `.terminal-body:focus-within` keeps a visible ring while the hidden
-  // input holds focus.
-  terminalBody.setAttribute('tabindex', '0');
-  terminalBody.addEventListener('focus', () => hiddenInput.focus());
-  terminalBody.addEventListener('click', () => hiddenInput.focus());
+    const run = (raw) => {
+      const line = raw.trim().replace(/\s+/g, ' ');
+      if (!line) return;
+      const lower = line.toLowerCase();
+      const originalArgs = line.split(' ').slice(1);
 
-  hiddenInput.addEventListener('input', () => {
-    if (inputMirror) inputMirror.textContent = hiddenInput.value;
-  });
-
-  hiddenInput.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      if (history.length === 0) return;
-      historyIndex = Math.min(historyIndex + 1, history.length - 1);
-      hiddenInput.value = history[historyIndex];
-      if (inputMirror) inputMirror.textContent = hiddenInput.value;
-      return;
-    }
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (historyIndex <= 0) { historyIndex = -1; hiddenInput.value = ''; if (inputMirror) inputMirror.textContent = ''; return; }
-      historyIndex--;
-      hiddenInput.value = history[historyIndex];
-      if (inputMirror) inputMirror.textContent = hiddenInput.value;
-      return;
-    }
-    if (e.key !== 'Enter') return;
-
-    const raw = hiddenInput.value.trim();
-    const cmd = raw.toLowerCase();
-    hiddenInput.value = '';
-    if (inputMirror) inputMirror.textContent = '';
-
-    if (raw !== '') {
-      history.unshift(raw);
-      historyIndex = -1;
-      appendLine(`<span class="tc-prompt">~</span>&nbsp;<span class="tc-msg">${esc(raw)}</span>`, 'tc-output-line tc-echo');
-      refreshHint();
-    }
-
-    if (cmd === 'clear') {
-      terminalCommits.querySelectorAll('.tc-output-line, .tc-echo').forEach(el => el.remove());
-    } else if (cmd !== '') {
-      const handler = commands[cmd];
-      if (handler) {
-        const lines = handler();
-        if (lines) lines.forEach(line => appendLine(line));
-      } else {
-        appendLine(`<span style="color:#ff5f56">zsh: command not found: ${esc(raw)}</span>`);
+      if (exactCommands[lower]) {
+        appendLines(exactCommands[lower]());
+        return;
       }
-    }
 
-    terminalBody.scrollTop = terminalBody.scrollHeight;
-  });
-}
+      const [cmd, ...args] = lower.split(' ');
+      const flags = args.filter((a) => a.startsWith('-'));
+      const positional = args.filter((a) => !a.startsWith('-')).map(stripSlash);
+
+      switch (cmd) {
+        case 'help':
+        case '?':
+          appendLines(helpLines());
+          return;
+        case 'whoami':
+          appendLines([
+            'guest',
+            '<span class="tc-date">（but aren\'t we all just guests on this pale blue dot?）</span>',
+          ]);
+          return;
+        case 'pwd':
+          appendLines(['/home/pxyu']);
+          return;
+        case 'clear':
+          output.replaceChildren();
+          return;
+        case 'ls': {
+          const long = flags.some((f) => f.includes('l'));
+          const target = positional[0] || '';
+          if (!target) {
+            appendLines(long
+              ? [
+                'total 3',
+                'drwxr-xr-x  <span class="tc-ref">bio/</span>',
+                'drwxr-xr-x  <span class="tc-ref">papers/</span>',
+                'drwxr-xr-x  <span class="tc-ref">contact/</span>',
+              ]
+              : ['<span class="tc-ref">bio/</span>  <span class="tc-ref">papers/</span>  <span class="tc-ref">contact/</span>']);
+            return;
+          }
+          if (target === 'papers') {
+            appendLines(listLatest());
+            return;
+          }
+          if (target === 'bio') {
+            appendLines(['bio.txt']);
+            return;
+          }
+          if (target === 'contact') {
+            appendLines(['email  scholar  linkedin  twitter  github']);
+            return;
+          }
+          appendLines([`<span class="tc-error">ls: ${esc(target)}: No such file or directory</span>`]);
+          return;
+        }
+        case 'cat': {
+          const file = stripSlash((positional.join(' ') || '').replace(/^\.\//, ''));
+          if (!file) {
+            appendLines(['<span class="tc-error">cat: missing file operand</span>']);
+            return;
+          }
+          if (file === 'bio.txt' || file === 'bio') {
+            appendLines([
+              'Building AI and search systems at Snowflake Inc.',
+              'Ph.D. from Manning CICS, UMass Amherst.',
+              'Research @ CIIR, advised by James Allan &amp; Negin Rahimi.',
+              'Prev: Dataminr · Amazon Alexa · Baidu Research.',
+            ]);
+            return;
+          }
+          if (file === 'papers' || file === 'papers.txt') {
+            appendLines(listLatest());
+            return;
+          }
+          appendLines([`<span class="tc-error">cat: ${esc(file)}: No such file or directory</span>`]);
+          return;
+        }
+        case 'cd': {
+          const dest = positional[0] || '';
+          if (!dest || dest === '~' || dest === '.' || dest === '/home/pxyu') return;
+          const jumped = openTarget(dest);
+          if (jumped) {
+            appendLines(jumped);
+            return;
+          }
+          appendLines([`<span class="tc-error">cd: no such file or directory: ${esc(args[0] || dest)}</span>`]);
+          return;
+        }
+        case 'open': {
+          const name = positional[0];
+          if (!name) {
+            appendLines([
+              '<span class="tc-error">open: missing operand</span>',
+              '<span class="tc-date">usage: open email | scholar | linkedin | twitter | github | papers | bio</span>',
+            ]);
+            return;
+          }
+          const result = openTarget(name);
+          if (result) {
+            appendLines(result);
+            return;
+          }
+          appendLines([`<span class="tc-error">open: unknown target: ${esc(name)}</span>`]);
+          return;
+        }
+        case 'echo': {
+          if (args[0] === '$shell') {
+            appendLines(['/bin/zsh']);
+            return;
+          }
+          if (args[0] === '$home') {
+            appendLines(['/home/pxyu']);
+            return;
+          }
+          appendLines([esc(originalArgs.join(' '))]);
+          return;
+        }
+        case 'git': {
+          const gitLine = args.join(' ');
+          if (gitLine === 'log' || gitLine === 'log --oneline --graph') {
+            appendLines(['<span class="tc-date">already displayed above.</span>']);
+            return;
+          }
+          appendLines([`<span class="tc-error">git: '${esc(gitLine)}' is not a pxyu command</span>`]);
+          return;
+        }
+        case 'vim':
+          appendLines([
+            '<span class="tc-date">VIM - Vi IMproved 9.1</span>',
+            '~',
+            '~',
+            '<span class="tc-date">To exit: Esc → :q! → Enter</span>',
+          ]);
+          return;
+        case 'nano':
+          appendLines(['<span class="tc-date">GNU nano 7.2  [New File]</span>', '^X Exit']);
+          return;
+        case 'fortune':
+          appendLines(fortune());
+          return;
+        case 'exit':
+          appendLines(["There is no escape. You're already here."]);
+          return;
+        default:
+          appendLines([`<span class="tc-error">zsh: command not found: ${esc(line)}</span>`]);
+      }
+    };
+
+    const history = [];
+    let historyIndex = -1;
+    let draft = '';
+
+    const submit = () => {
+      const raw = input.value;
+      input.value = '';
+      const collapsed = raw.trim().replace(/\s+/g, ' ');
+      if (collapsed) {
+        if (history[0] !== collapsed) history.unshift(collapsed);
+        historyIndex = -1;
+        draft = '';
+        appendLines([`<span class="tc-prompt">~</span>  <span class="tc-msg">${esc(collapsed)}</span>`], 'tc-output-line tc-echo');
+        refreshHint();
+      }
+      run(collapsed);
+      scrollToPrompt();
+    };
+
+    terminalBody.addEventListener('click', (e) => {
+      if (e.target.closest('a, input, button, textarea')) return;
+      const sel = window.getSelection && String(window.getSelection());
+      if (sel) return;
+      input.focus();
+    });
+
+    prompt.addEventListener('submit', (e) => {
+      e.preventDefault();
+      submit();
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        output.replaceChildren();
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!history.length) return;
+        if (historyIndex === -1) draft = input.value;
+        historyIndex = Math.min(historyIndex + 1, history.length - 1);
+        input.value = history[historyIndex];
+        return;
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (historyIndex === -1) return;
+        if (historyIndex === 0) {
+          historyIndex = -1;
+          input.value = draft;
+          return;
+        }
+        historyIndex--;
+        input.value = history[historyIndex];
+      }
+    });
+  };
+
+  const play = () => {
+    if (log.classList.contains('is-played') || log.classList.contains('is-playing')) return;
+    if (reducedMotion) {
+      log.classList.add('is-played');
+      setupInteractiveTerminal();
+      return;
+    }
+    log.classList.add('is-playing');
+    const doneIn = initialDelay + Math.max(lineCount - 1, 0) * stagger + 320;
+    window.setTimeout(() => {
+      log.classList.add('is-played');
+      log.classList.remove('is-playing');
+      setupInteractiveTerminal();
+    }, doneIn);
+  };
+
+  const panel = terminalBody.closest('.panel') || terminalBody;
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          play();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(panel);
+  } else {
+    play();
+  }
+})();
 
 // Paper tooltips
 (function () {

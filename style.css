@@ -925,6 +925,14 @@ body.dark-theme .profile-photo {
     border-radius: 0 0 15px 15px;
     overflow-x: auto;
     overflow-y: auto;
+    max-height: min(28rem, 65vh);
+    overscroll-behavior: contain;
+    cursor: text;
+}
+
+.terminal-body:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
 }
 
 /* Subtle CRT scanlines */
@@ -983,19 +991,24 @@ body.dark-theme .terminal-body::after {
 .tc-msg   { color: var(--tc-msg-color); }
 .tc-date  { color: var(--tc-date-color); flex-shrink: 0; }
 
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0; }
+@keyframes tc-line-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
 }
 
-.terminal-cursor {
-    display: none;
-    color: var(--tc-date-color);
-    animation: blink 1s step-end infinite;
+@media (prefers-reduced-motion: no-preference) {
+    html.js #terminal-log:not(.is-played) .tc-line {
+        opacity: 0;
+    }
+
+    html.js #terminal-log.is-playing:not(.is-played) .tc-line {
+        animation: tc-line-in 0.28s ease forwards;
+        animation-delay: calc(200ms + var(--i, 0) * 160ms);
+    }
 }
 
-.terminal-cursor.visible {
-    display: inline;
+html.js #terminal-log.is-played .tc-line {
+    opacity: 1;
 }
 
 /* Paper tooltip */
@@ -1102,39 +1115,42 @@ body.dark-theme .terminal-body::after {
     z-index: 10;
 }
 
-/* Interactive terminal */
-.terminal-body {
-    cursor: text;
-}
-
-.terminal-body:focus {
-    outline: none;
-}
-
-.terminal-body:focus-within {
-    outline: 2px solid var(--accent);
-    outline-offset: -2px;
-}
-
 .tc-interactive-prompt {
     display: flex;
     align-items: center;
     gap: 0;
     margin-top: 2px;
-    white-space: pre;
 }
 
-.tc-input-mirror {
+.tc-input {
+    flex: 1;
+    min-width: 0;
+    margin-left: 0.55em;
+    padding: 0;
+    border: 0;
+    background: transparent;
     color: var(--tc-msg-color);
+    font: inherit;
+    caret-color: var(--tc-prompt-color);
+    outline: none;
 }
 
 .tc-output-line {
     color: var(--terminal-text);
-    white-space: pre;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
 }
 
 .tc-echo {
     opacity: 0.55;
+}
+
+.tc-error {
+    color: #ff5f56;
+}
+
+.tc-hint {
+    margin: 4px 0 2px;
 }
 
 @media (min-width: 721px) {
@@ -1158,9 +1174,14 @@ body.dark-theme .terminal-body::after {
     }
 
     .tc-output-line,
-    .tc-interactive-prompt {
+    .tc-interactive-prompt,
+    .tc-hint {
         white-space: pre-wrap;
-        overflow-wrap: anywhere;
+        overflow-wrap: break-word;
+    }
+
+    .tc-input {
+        font-size: 1rem;
     }
 }
 
