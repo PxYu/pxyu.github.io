@@ -1,8 +1,17 @@
+@font-face {
+    font-family: "Aoyagi Reisho";
+    src: local("青柳隷書SIMO2_T"), local("aoyagireisyosimo2"), url("fonts/aoyagi-name.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+4F59, U+749E, U+8ED2;
+}
+
 :root {
     color-scheme: light;
     --font-text: "STIX Two Text", Georgia, "Times New Roman", serif;
     --font-name: "Fraunces", var(--font-text);
-    --font-cjk-name: "Songti SC", "STSong", "Noto Serif CJK SC", "Times New Roman", serif;
+    --font-cjk-name: "Aoyagi Reisho", "Libian SC", "Baoli SC", "STLiti", "LiSu", serif;
     --font-mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, monospace;
     --text: #1a1614;
     --text-secondary: #6b5f58;
@@ -326,7 +335,7 @@ h1 {
 .chinese-name {
     display: inline-flex;
     align-items: flex-end;
-    gap: 0.22em;
+    gap: 0.3em;
     flex: 0 0 auto;
 }
 
@@ -338,7 +347,7 @@ h1 {
 }
 
 .chinese-part-given {
-    gap: 0.08em;
+    gap: 0.18em;
 }
 
 .chinese-part::after {
@@ -355,9 +364,10 @@ h1 {
 
 .chinese-part ruby {
     font-family: var(--font-cjk-name);
-    font-size: 1.4rem;
+    font-size: 1.72rem;
     line-height: 1;
-    font-weight: 600;
+    font-weight: 400;
+    font-synthesis: none;
 }
 
 .chinese-part rt {
