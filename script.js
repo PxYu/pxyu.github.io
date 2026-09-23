@@ -154,26 +154,147 @@ systemDarkMode.addEventListener('change', (event) => {
       return [`<span class="tc-msg">opening ${esc(name)}...</span>`];
     };
 
-    const fortune = () => {
-      const proverbs = [
-        ['千里之行，始于足下。', 'A journey of a thousand miles begins with a single step.'],
-        ['活到老，学到老。', 'Live until old, learn until old.'],
-        ['失败乃成功之母。', 'Failure is the mother of success.'],
-        ['三人行，必有我师焉。', 'Among three people walking, there is always one I can learn from.'],
-        ['欲速则不达。', 'More haste, less speed.'],
-        ['知己知彼，百战不殆。', 'Know yourself and know your enemy, and you will never be defeated.'],
-        ['滴水穿石。', 'Dripping water can pierce through stone.'],
-        ['人无远虑，必有近忧。', 'One who does not plan for the future will find trouble at their doorstep.'],
-        ['一寸光阴一寸金，寸金难买寸光阴。', 'An inch of time is worth an inch of gold, but gold cannot buy time.'],
-        ['鱼和熊掌不可兼得。', "You cannot have both the fish and the bear's paw."],
-        ['学如逆水行舟，不进则退。', 'Learning is like rowing upstream: not to advance is to fall behind.'],
-        ['书山有路勤为径，学海无涯苦作舟。', 'The road up the mountain of books is paved with diligence; the sea of learning has no shore but hard work as your boat.'],
-        ['众人拾柴火焰高。', 'When everyone gathers firewood, the flames burn high.'],
-        ['不入虎穴，焉得虎子。', "How can you catch tiger cubs without entering the tiger's lair?"],
-        ['授人以鱼不如授人以渔。', 'Give a man a fish and you feed him for a day; teach him to fish and you feed him for a lifetime.'],
-      ];
-      const [zh, en] = proverbs[Math.floor(Math.random() * proverbs.length)];
-      return [zh, `<span class="tc-date">${en}</span>`];
+    const localFortunes = [
+      ['grep: soul: No such file or directory', 'Have you tried stemming?'],
+      ['Your query is underspecified.', "So is everyone else's."],
+      ['Citation needed.', 'Including this one.'],
+      ['过拟合了童年，泛化不了星期一。', 'Overfit the childhood set. Mondays are OOD.'],
+      ['The index is always one update behind the truth.', 'So are we.'],
+      ['未检索到相关结果。', 'Try a longer query, or a shorter life plan.'],
+      ['rm: /: Permission denied', 'The universe keeps backups.'],
+      ['This incident will be reported.', 'It never is.'],
+      ['三人行，必有我师焉。', 'When I walk with two others, one of them can be my teacher. — Analects'],
+      ['欲速则不达。', 'More haste, less speed.'],
+      ['知彼知己，百战不殆。', 'Know the other and know yourself, and you need not fear a hundred battles. — Sun Tzu'],
+      ['人无远虑，必有近忧。', 'Without thought for what is distant, sorrow is near at hand. — Analects'],
+      ['授人以鱼不如授人以渔。', 'Give a fish and you feed them a day; teach them to fish and you feed them for life.'],
+      ['学如逆水行舟，不进则退。', 'Learning is rowing upstream: stop, and you drift back.'],
+      ['千里之行，始于足下。', 'A journey of a thousand miles begins with a single step. — Laozi'],
+      ['不入虎穴，焉得虎子。', "How do you catch a tiger cub without entering the tiger's den?"],
+    ];
+
+    const recentFortuneKeys = [];
+    const recentFortuneLimit = 8;
+    let fortuneQueue = Promise.resolve();
+
+    const fortuneKey = (pair) => String(pair && pair[0] || '').trim();
+
+    const rememberFortune = (pair) => {
+      const key = fortuneKey(pair);
+      if (!key) return;
+      const prev = recentFortuneKeys.indexOf(key);
+      if (prev !== -1) recentFortuneKeys.splice(prev, 1);
+      recentFortuneKeys.push(key);
+      if (recentFortuneKeys.length > recentFortuneLimit) recentFortuneKeys.shift();
+    };
+
+    const localFortune = () => {
+      const last = recentFortuneKeys[recentFortuneKeys.length - 1];
+      const blocked = new Set(recentFortuneKeys);
+      let pool = localFortunes.filter((row) => !blocked.has(fortuneKey(row)));
+      if (!pool.length) {
+        pool = localFortunes.filter((row) => fortuneKey(row) !== last);
+      }
+      if (!pool.length) pool = localFortunes;
+      return pool[Math.floor(Math.random() * pool.length)];
+    };
+
+    const fetchJson = async (url) => {
+      const ctrl = new AbortController();
+      const timer = window.setTimeout(() => ctrl.abort(), 2000);
+      try {
+        const res = await fetch(url, { signal: ctrl.signal, credentials: 'omit' });
+        if (!res.ok) throw new Error('bad status');
+        return await res.json();
+      } finally {
+        window.clearTimeout(timer);
+      }
+    };
+
+    const remoteFortunes = [
+      async () => {
+        const d = await fetchJson('https://v1.jinrishici.com/all.json');
+        const text = (d && d.content || '').trim();
+        if (!text) throw new Error('empty');
+        const by = [d.author, d.origin].filter(Boolean).join(' · ');
+        return [text, by ? `— ${by}` : ''];
+      },
+      async () => {
+        const d = await fetchJson('https://v1.hitokoto.cn/?encode=json&charset=utf-8&c=d&c=i&c=k');
+        const text = (d && d.hitokoto || '').trim();
+        if (text.length < 8 || text.length > 72) throw new Error('skip');
+        const by = [d.from_who, d.from].filter(Boolean).join(' · ');
+        return [text, by ? `— ${by}` : ''];
+      },
+      async () => {
+        const d = await fetchJson('https://official-joke-api.appspot.com/jokes/programming/random');
+        const joke = Array.isArray(d) ? d[0] : d;
+        if (!joke || !joke.setup || !joke.punchline) throw new Error('empty');
+        return [String(joke.setup), String(joke.punchline)];
+      },
+      async () => {
+        const d = await fetchJson('https://uselessfacts.jsph.pl/api/v2/facts/random?language=en');
+        const text = (d && d.text || '').trim();
+        if (text.length < 20 || text.length > 160) throw new Error('skip');
+        return [text, '— useless fact'];
+      },
+    ];
+
+    const pickFortune = async () => {
+      const blocked = new Set(recentFortuneKeys);
+      const fresh = (pair) => pair && fortuneKey(pair) && !blocked.has(fortuneKey(pair));
+
+      if (Math.random() < 0.4) return localFortune();
+      const order = remoteFortunes.slice();
+      for (let i = order.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = order[i];
+        order[i] = order[j];
+        order[j] = tmp;
+      }
+      for (const src of order.slice(0, 2)) {
+        try {
+          const pair = await src();
+          if (fresh(pair)) return pair;
+        } catch {
+          // try the other source, then an unused local line
+        }
+      }
+      return localFortune();
+    };
+
+    const renderFortune = (el, pair) => {
+      const line = pair && pair[0] ? String(pair[0]) : '';
+      const extra = pair && pair[1] ? String(pair[1]) : '';
+      el.textContent = line;
+      if (extra) {
+        const sub = document.createElement('div');
+        sub.className = 'tc-output-line';
+        const span = document.createElement('span');
+        span.className = 'tc-date';
+        span.textContent = extra;
+        sub.appendChild(span);
+        el.after(sub);
+      }
+    };
+
+    const printFortune = () => {
+      const pending = document.createElement('div');
+      pending.className = 'tc-output-line';
+      pending.innerHTML = '<span class="tc-date">consulting /dev/oracle...</span>';
+      output.appendChild(pending);
+      scrollToPrompt();
+      fortuneQueue = fortuneQueue.catch(() => {}).then(async () => {
+        let pair;
+        try {
+          pair = await pickFortune();
+        } catch {
+          pair = localFortune();
+        }
+        rememberFortune(pair);
+        renderFortune(pending, pair);
+        scrollToPrompt();
+      });
     };
 
     const helpLines = () => [
@@ -365,7 +486,7 @@ systemDarkMode.addEventListener('change', (event) => {
           appendLines(['<span class="tc-date">GNU nano 7.2  [New File]</span>', '^X Exit']);
           return;
         case 'fortune':
-          appendLines(fortune());
+          printFortune();
           return;
         case 'exit':
           appendLines(["There is no escape. You're already here."]);
