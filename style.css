@@ -1001,7 +1001,7 @@ body.dark-theme .terminal-body::after {
 .tc-logo {
     width: 1.35em;
     height: 1.35em;
-    margin-right: 0.5em;
+    flex-shrink: 0;
     padding: 0.08em;
     border-radius: 3px;
     object-fit: contain;
