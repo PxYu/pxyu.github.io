@@ -989,9 +989,24 @@ body.dark-theme .terminal-body::after {
     min-width: 0;
 }
 
+.tc-graph {
+    display: inline-block;
+    min-width: 4ch;
+    white-space: pre;
+    flex-shrink: 0;
+    font-variant-ligatures: none;
+}
+
+.tc-graph .g-main { color: var(--tc-star-color); }
+.tc-graph .g-side { color: var(--tc-ref-color); }
+
+.tc-line-branch .tc-graph {
+    padding-left: 4ch;
+}
+
 .tc-star  { color: var(--tc-star-color); }
-.tc-hash  { color: var(--tc-hash-color); }
-.tc-ref   { color: var(--tc-ref-color); }
+.tc-hash  { color: var(--tc-hash-color); flex-shrink: 0; }
+.tc-ref   { color: var(--tc-ref-color); flex-shrink: 0; }
 .tc-msg   { color: var(--tc-msg-color); }
 .tc-date  { color: var(--tc-date-color); flex-shrink: 0; }
 
@@ -1183,12 +1198,18 @@ html.js #terminal-log.is-played .tc-line {
 
 @media (max-width: 720px) {
     .tc-line {
-        display: block;
+        display: flex;
         min-width: 0;
     }
 
     .tc-left {
-        display: inline;
+        display: flex;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .tc-msg {
+        white-space: normal;
     }
 
     .tc-line .tc-date {
