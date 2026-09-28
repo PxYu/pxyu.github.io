@@ -991,7 +991,6 @@ body.dark-theme .terminal-body::after {
 
 .tc-graph {
     display: inline-block;
-    min-width: 4ch;
     white-space: pre;
     flex-shrink: 0;
     font-variant-ligatures: none;
@@ -999,10 +998,6 @@ body.dark-theme .terminal-body::after {
 
 .tc-graph .g-main { color: var(--tc-star-color); }
 .tc-graph .g-side { color: var(--tc-ref-color); }
-
-.tc-line-branch .tc-graph {
-    padding-left: 4ch;
-}
 
 .tc-star  { color: var(--tc-star-color); }
 .tc-hash  { color: var(--tc-hash-color); flex-shrink: 0; }
