@@ -1022,7 +1022,7 @@ systemDarkMode.addEventListener('change', (event) => {
   if (!list) return;
 
   const items = Array.from(list.children);
-  const perPage = 10;
+  const perPage = 5;
   const pageCount = Math.ceil(items.length / perPage);
 
   const markEdges = (start, end) => {
