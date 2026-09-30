@@ -329,7 +329,7 @@ h1 {
     align-items: baseline;
     flex-wrap: wrap;
     gap: 14px;
-    margin: 14px 0 10px;
+    margin: 14px 0 16px;
 }
 
 .chinese-name {
@@ -397,18 +397,6 @@ h1 {
     font-weight: 600;
     font-variation-settings: 'SOFT' 28;
     color: var(--heading);
-}
-
-.affiliation {
-    font-size: 1rem;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
-}
-
-.hero-summary {
-    max-width: 60ch;
-    margin-bottom: 16px;
-    color: var(--text-secondary);
 }
 
 .contact-links {
@@ -531,8 +519,7 @@ h2 {
 
 .location,
 .date,
-.role,
-.hero-summary {
+.role {
     color: var(--text-secondary);
 }
 
@@ -714,8 +701,7 @@ a {
 }
 
 .panel p a,
-.panel li a,
-.affiliation a {
+.panel li a {
     color: var(--heading);
     text-decoration: none;
     background-image: linear-gradient(rgba(204, 120, 92, 0.2), rgba(204, 120, 92, 0.2));
@@ -728,9 +714,7 @@ a {
 .panel p a:hover,
 .panel p a:focus-visible,
 .panel li a:hover,
-.panel li a:focus-visible,
-.affiliation a:hover,
-.affiliation a:focus-visible {
+.panel li a:focus-visible {
     color: var(--accent);
     background-size: 100% 100%;
     background-position: 0 100%;
