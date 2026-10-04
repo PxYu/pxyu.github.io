@@ -132,6 +132,22 @@ body::after {
     margin: 0 auto;
 }
 
+.site-footer {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.site-footer span {
+    white-space: nowrap;
+}
+
 .theme-toggle-wrap {
     display: flex;
     justify-content: flex-end;
