@@ -68,6 +68,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,SOFT,wght@11..144,0..100,600;11..144,0..100,700&amp;family=STIX+Two+Text:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link id="pixel-fonts" href="https://fonts.googleapis.com/css2?family=DotGothic16&amp;family=Pixelify+Sans:wght@400;600;700&amp;family=VT323&amp;display=swap" rel="stylesheet" media="not all">
+    <link id="pixel-style" rel="stylesheet" href="pixel-style.css" media="not all">
+    <script src="site-config.js"></script>
+    <script>
+        const pixelStyleMedia = window.siteConfig.pixelStyle ? 'all' : 'not all';
+        document.getElementById('pixel-fonts').media = pixelStyleMedia;
+        document.getElementById('pixel-style').media = pixelStyleMedia;
+    </script>
 </head>
 <body>
     <div class="page-shell">
@@ -351,6 +359,6 @@
         </div>
     </div>
     <script src="topojson.min.js"></script>
-    <script src="script.js"></script>
+    <script src="script.js?v=pixel-style"></script>
 </body>
 </html>

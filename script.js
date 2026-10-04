@@ -660,7 +660,9 @@ systemDarkMode.addEventListener('change', (event) => {
   const canvas = document.getElementById('visitor-globe');
   if (!canvas) return;
 
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = window.siteConfig?.pixelStyle
+    ? 64 / 320
+    : window.devicePixelRatio || 1;
   canvas.width = 320 * dpr;
   canvas.height = 320 * dpr;
 
