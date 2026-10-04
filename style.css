@@ -418,10 +418,11 @@ h1 {
     line-height: 1;
 }
 
-.contact-icon .ph-fill {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.contact-pixel {
+    display: block;
+    width: 24px;
+    height: 24px;
+    shape-rendering: crispEdges;
 }
 
 .contact-links a:hover,

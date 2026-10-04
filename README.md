@@ -4,4 +4,4 @@ Personal site of **Puxuan Yu (Martin)** — Senior AI & Search Engineer at Snowf
 
 **[pxyu.github.io](https://pxyu.github.io)**
 
-Built with vanilla HTML/CSS/JS. Typography by [Fraunces](https://fraunces.typotheque.com) & [DM Sans](https://fonts.google.com/specimen/DM+Sans). Icons by [Phosphor](https://phosphoricons.com). Globe rendered with Canvas + TopoJSON.
+Built with vanilla HTML/CSS/JS. Typography by [Fraunces](https://fraunces.typotheque.com) & [DM Sans](https://fonts.google.com/specimen/DM+Sans). Contact icons are custom pixel art. Globe rendered with Canvas + TopoJSON.
