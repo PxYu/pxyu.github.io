@@ -222,6 +222,8 @@ h2::before {
 .terminal-body { border-radius: 0; font-size: 18px; line-height: 1.55; padding: 20px 24px; }
 .terminal-body::after { display: none; }
 .tc-logo { image-rendering: pixelated; border-radius: 0; }
+.tc-logo-classic { display: none; }
+.tc-logo-pixel { display: inline-block; shape-rendering: crispEdges; }
 .tc-hint { font-size: 17px; }
 .tc-line { gap: 12px; }
 .tc-left { gap: 7px; }
