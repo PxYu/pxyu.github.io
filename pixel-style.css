@@ -223,7 +223,16 @@ h2::before {
 .terminal-body::after { display: none; }
 .tc-logo { image-rendering: pixelated; border-radius: 0; }
 .tc-logo-classic { display: none; }
-.tc-logo-pixel { display: inline-block; shape-rendering: crispEdges; }
+.tc-logo-pixel,
+body.dark-theme .tc-logo-pixel,
+body:not(.light-theme) .tc-logo-pixel {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: transparent;
+    shape-rendering: crispEdges;
+}
 .tc-hint { font-size: 17px; }
 .tc-line { gap: 12px; }
 .tc-left { gap: 7px; }
