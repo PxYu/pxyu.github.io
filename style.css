@@ -99,6 +99,9 @@ html {
 }
 
 body {
+    /* Keep the pointer visible over text even when the system I-beam
+       has poor contrast. Text selection remains available. */
+    cursor: default;
     font-family: var(--font-text);
     font-weight: 400;
     color: var(--text);
@@ -910,7 +913,7 @@ body.dark-theme .profile-photo {
     overflow-y: auto;
     max-height: min(28rem, 65vh);
     overscroll-behavior: contain;
-    cursor: text;
+    cursor: default;
 }
 
 .terminal-body:focus-within {
@@ -1147,6 +1150,7 @@ html.js #terminal-log.is-played .tc-line {
 }
 
 .tc-input {
+    cursor: default;
     flex: 1;
     min-width: 0;
     margin-left: 0.55em;
