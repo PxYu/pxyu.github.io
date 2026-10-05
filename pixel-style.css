@@ -183,7 +183,8 @@ body.dark-theme .panel:hover {
 }
 
 .globe-wrap { gap: 8px; }
-#visitor-globe { width: 128px; height: 128px; border-radius: 0; image-rendering: pixelated; }
+.globe-wrap:hover { transform: none; }
+#visitor-globe { width: 160px; height: 160px; border-radius: 0; image-rendering: pixelated; }
 .globe-city { font-size: 16px; max-width: 150px; }
 .globe-tooltip { font-size: 16px; border: 2px solid var(--border); border-radius: 0; box-shadow: 3px 3px 0 var(--pixel-shadow); }
 

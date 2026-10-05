@@ -660,8 +660,9 @@ systemDarkMode.addEventListener('change', (event) => {
   const canvas = document.getElementById('visitor-globe');
   if (!canvas) return;
 
-  const dpr = window.siteConfig?.pixelStyle
-    ? 64 / 320
+  const pixelStyle = Boolean(window.siteConfig?.pixelStyle);
+  const dpr = pixelStyle
+    ? 40 / 320
     : window.devicePixelRatio || 1;
   canvas.width = 320 * dpr;
   canvas.height = 320 * dpr;
@@ -669,7 +670,7 @@ systemDarkMode.addEventListener('change', (event) => {
   const ctx = canvas.getContext('2d');
   const S = canvas.width;
   const cx = S / 2, cy = S / 2;
-  const R = S / 2 - 18 * dpr;
+  const R = pixelStyle ? 16 : S / 2 - 18 * dpr;
 
   const TILT = 23.5 * Math.PI / 180;
 
@@ -681,6 +682,9 @@ systemDarkMode.addEventListener('change', (event) => {
   let paused = false;
   let visible = true;
   const reducedMotionMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const globeFrameInterval = pixelStyle ? 1000 / 8 : 0;
+  const globeRotationSpeed = pixelStyle ? 0.22 : 0.48;
+  let lastGlobeFrame = null;
 
   fetch('./land-110m.json')
     .then(r => r.json())
@@ -788,9 +792,110 @@ systemDarkMode.addEventListener('change', (event) => {
     (!document.body.classList.contains('light-theme') &&
       window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-  const draw = () => {
+  const drawPixelGlobe = (dark) => {
+    // Use the coastline only as a binary mask. Every visible pixel below
+    // is painted as a solid, integer-aligned cell from a small palette.
+    ctx.clearRect(0, 0, S, S);
+    if (landFeature) {
+      ctx.beginPath();
+      const geom = landFeature.geometry;
+      (geom.type === 'MultiPolygon' ? geom.coordinates : [geom.coordinates])
+        .forEach(poly => poly.forEach(drawRing));
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+    }
+    const land = ctx.getImageData(0, 0, S, S).data;
+    ctx.clearRect(0, 0, S, S);
+
+    const outline = dark ? '#0e192b' : '#283c56';
+    const water = dark
+      ? ['#23436a', '#2f648b', '#438fac', '#68b7c6']
+      : ['#285784', '#3487ae', '#59b7cc', '#91d5d9'];
+    const grass = dark
+      ? ['#346047', '#4a8553', '#74a765', '#a5c67b']
+      : ['#487148', '#72a65b', '#a2cb76', '#d1df9a'];
+
+    // Sparse, single-pixel meridians and an equator make the sphere read
+    // as a rotating globe without reintroducing tiny dashed details.
+    const grid = new Uint8Array(S * S);
+    const markGrid = (lat, lng) => {
+      const p = project(lat, lng);
+      if (p.z < 0.15) return;
+      const x = Math.floor(p.sx);
+      const y = Math.floor(p.sy);
+      if (x >= 0 && x < S && y >= 0 && y < S) grid[y * S + x] = 1;
+    };
+    for (let lng = 0; lng < 360; lng += 60) {
+      for (let lat = -90; lat <= 90; lat += 2) markGrid(lat, lng);
+    }
+    for (let lng = 0; lng < 360; lng += 2) markGrid(0, lng);
+
+    // A short, stepped ground shadow, rather than a blurred glow.
+    ctx.fillStyle = dark ? '#142431' : '#b5d6cc';
+    ctx.fillRect(cx - 11, cy + R + 2, 22, 1);
+    ctx.fillRect(cx - 8, cy + R + 3, 16, 1);
+
+    for (let y = 0; y < S; y++) {
+      for (let x = 0; x < S; x++) {
+        const nx = (x + 0.5 - cx) / R;
+        const ny = (y + 0.5 - cy) / R;
+        const distance = nx * nx + ny * ny;
+        if (distance > 1) continue;
+        if (distance > ((R - 1) / R) ** 2) {
+          ctx.fillStyle = outline;
+        } else {
+          const z = Math.sqrt(1 - distance);
+          const light = -0.45 * nx - 0.45 * ny + 0.65 * z;
+          const shade = light < 0.15 ? 0 : light < 0.45 ? 1 : light < 0.75 ? 2 : 3;
+          const isLand = land[(y * S + x) * 4 + 3] >= 128;
+          const palette = isLand ? grass : water;
+          ctx.fillStyle = palette[shade];
+          if (!isLand && grid[y * S + x]) {
+            ctx.fillStyle = dark ? '#579ba9' : '#b3d7ce';
+          }
+        }
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+
+    const pin = (lat, lng, color) => {
+      const p = project(lat, lng);
+      if (!p.vis) return null;
+      const x = Math.round(p.sx);
+      const y = Math.round(p.sy) - 2;
+      ctx.fillStyle = outline;
+      ctx.fillRect(x - 2, y - 1, 5, 3);
+      ctx.fillRect(x - 1, y - 2, 3, 5);
+      ctx.fillStyle = color;
+      ctx.fillRect(x - 1, y - 1, 3, 3);
+      ctx.fillRect(x, y + 2, 1, 1);
+      ctx.fillStyle = '#fff3d6';
+      ctx.fillRect(x, y - 1, 1, 1);
+      return { sx: x, sy: y };
+    };
+    wuhanScreen = pin(30.59, 114.31, '#ebbf4a');
+    visitorScreen = visitorLat === null ? null : pin(visitorLat, visitorLng, '#df7158');
+  };
+
+  const draw = (now = performance.now()) => {
+    const elapsed = lastGlobeFrame === null ? 0 : now - lastGlobeFrame;
+    if (lastGlobeFrame !== null && elapsed < globeFrameInterval) {
+      if (visible) requestAnimationFrame(draw);
+      return;
+    }
+    lastGlobeFrame = now;
+    // Pixel mode advances in visible steps; rotation speed is independent
+    // of the display refresh rate. Avoid jumps after a background-tab pause.
+    if (!reducedMotionMQ.matches && !paused) {
+      rot += globeRotationSpeed * Math.min(elapsed, 250) / 1000;
+    }
     ctx.clearRect(0, 0, S, S);
     const dark = isDark();
+    if (pixelStyle) {
+      drawPixelGlobe(dark);
+      if (visible) requestAnimationFrame(draw);
+      return;
+    }
 
     // Ocean — flat + rim shadow, saturated cartoon colors
     const ocean = ctx.createRadialGradient(cx - R * 0.25, cy - R * 0.3, R * 0.1, cx, cy, R);
@@ -966,9 +1071,6 @@ systemDarkMode.addEventListener('change', (event) => {
     ctx.lineWidth = 4.5 * dpr;
     ctx.stroke();
 
-    if (!reducedMotionMQ.matches && !paused) {
-      rot += 0.008;
-    }
     if (visible) requestAnimationFrame(draw);
   };
 
@@ -979,7 +1081,10 @@ systemDarkMode.addEventListener('change', (event) => {
   const visibilityObserver = new IntersectionObserver(([entry]) => {
     const wasVisible = visible;
     visible = entry.isIntersecting;
-    if (visible && !wasVisible) requestAnimationFrame(draw);
+    if (visible && !wasVisible) {
+      lastGlobeFrame = null;
+      requestAnimationFrame(draw);
+    }
   }, { threshold: 0.01 });
   visibilityObserver.observe(canvas);
 
@@ -995,7 +1100,7 @@ systemDarkMode.addEventListener('change', (event) => {
       const scaleY = canvas.height / rect.height;
       const mx = (e.clientX - rect.left) * scaleX;
       const my = (e.clientY - rect.top) * scaleY;
-      const hitR = 14 * dpr;
+      const hitR = pixelStyle ? 3 : 14 * dpr;
       const lx = e.clientX - rect.left + 10;
       const ly = e.clientY - rect.top - 28;
 

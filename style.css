@@ -408,6 +408,19 @@ h1 {
     flex-wrap: wrap;
 }
 
+.contact-link-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.contact-fallback {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    gap: 4px;
+    white-space: nowrap;
+}
+
 .contact-links a {
     text-decoration: none;
     transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
